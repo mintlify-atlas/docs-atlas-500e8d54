@@ -361,3 +361,166 @@ const volumeRef = useRef<HTMLDivElement>(null);
 />
 ```
 </CodeGroup>
+
+---
+
+### LanguageSwitcher
+
+Toggle component to switch between Arabic and English interface languages.
+
+**Location:** `src/components/language-switcher.tsx:7`
+
+**Props:** None (reads/writes to `localeAtom`)
+
+**Features:**
+- Fixed position (top-right corner)
+- Animated sliding indicator
+- Toggles between 'ar' (Arabic) and 'en' (English)
+- Updates global locale state via Jotai
+- Accessible with ARIA labels
+- Responsive sizing (smaller on mobile)
+
+<CodeGroup>
+```tsx Usage
+import LanguageSwitcher from '@/components/language-switcher';
+
+export function Layout({ children }) {
+  return (
+    <div>
+      <LanguageSwitcher />
+      {children}
+    </div>
+  );
+}
+```
+
+```tsx Implementation Reference
+'use client';
+import { useAtom } from 'jotai';
+import { localeAtom } from '@/jotai/atom';
+
+export default function LanguageSwitcher() {
+  const [locale, setLocale] = useAtom(localeAtom);
+
+  return (
+    <button
+      onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
+      className="fixed right-2 top-2 z-50"
+    >
+      <span>{locale === 'en' ? 'text-white' : 'text-gray-600'}>
+        English
+      </span>
+      <span>{locale === 'ar' ? 'text-white' : 'text-gray-600'}>
+        عربية
+      </span>
+    </button>
+  );
+}
+```
+</CodeGroup>
+
+---
+
+### PWAUpdater
+
+Dialog that prompts users to reload when a new service worker version is available.
+
+**Location:** `src/components/pwa-updater.tsx:7`
+
+**Props:** None (manages internal state)
+
+**Features:**
+- Listens for service worker `waiting` event
+- Shows update dialog automatically
+- Reloads page when user confirms
+- Skips waiting and activates new service worker
+- Essential for PWA update flow
+
+<CodeGroup>
+```tsx Usage
+import PWAUpdater from '@/components/pwa-updater';
+
+export function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <PWAUpdater />
+      </body>
+    </html>
+  );
+}
+```
+
+```tsx Implementation Reference
+'use client';
+import { useEffect, useState } from 'react';
+import Dialog from './dialog';
+
+const onConfirmActivate = () => window.wb.messageSkipWaiting();
+
+const PWAUpdater = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('wb' in window)) return;
+
+    window.wb.addEventListener('controlling', () => {
+      globalThis.location.reload();
+    });
+
+    window.wb.addEventListener('waiting', () => setIsOpen(true));
+    window.wb.register();
+  }, []);
+
+  return (
+    <Dialog isOpen={isOpen} setIsOpen={setIsOpen}>
+      <div>A new version is available! Click to update.</div>
+      <button onClick={onConfirmActivate}>Reload and update</button>
+      <button onClick={() => setIsOpen(false)}>Cancel</button>
+    </Dialog>
+  );
+};
+```
+</CodeGroup>
+
+---
+
+### Footer
+
+Application footer with navigation links to main pages.
+
+**Location:** `src/components/footer.tsx:16`
+
+**Props:** None
+
+**Features:**
+- Fixed at bottom on mobile, static on desktop
+- Links to: Home, About, Privacy, Contact
+- SVG icons for each link
+- Internationalized labels
+- Clears selected reciter when navigating home
+- Responsive layout (icon-only on mobile, icon+text on desktop)
+
+<CodeGroup>
+```tsx Usage
+import Footer from '@/components/footer';
+
+export function Layout({ children }) {
+  return (
+    <div>
+      <main>{children}</main>
+      <Footer />
+    </div>
+  );
+}
+```
+
+```tsx Links Included
+// Footer provides navigation to:
+- / (Home) - Clears selected reciter
+- /about (About page)
+- /privacy (Privacy policy)
+- /contact (Contact/feedback form)
+```
+</CodeGroup>

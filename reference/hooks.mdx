@@ -430,3 +430,156 @@ return (
 );
 ```
 </CodeGroup>
+
+## Data Fetching Hooks
+
+### useReciters
+
+Fetches and manages the list of available Quran reciters from the MP3 Quran API.
+
+**Location:** `src/hooks/use-reciters.ts:11`
+
+**Parameters:** None (uses locale from react-intl context)
+
+<ResponseField name="reciters" type="Reciter[]">
+  Array of available reciters with their moshaf details
+</ResponseField>
+
+<ResponseField name="loading" type="boolean">
+  `true` while fetching data, `false` when complete
+</ResponseField>
+
+<ResponseField name="error" type="string | null">
+  Error message if fetch failed, `null` otherwise
+</ResponseField>
+
+**Features:**
+- Automatically fetches based on current locale (Arabic/English)
+- Manages loading and error states
+- Updates selected reciter if it changes
+- Cleans up on unmount to prevent memory leaks
+
+<CodeGroup>
+```tsx Usage
+import { useReciters } from '@/hooks/use-reciters';
+
+export function RecitersList() {
+  const { reciters, loading, error } = useReciters();
+
+  if (loading) return <div>Loading reciters...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  return (
+    <div>
+      {reciters.map(reciter => (
+        <div key={reciter.id}>{reciter.name}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+```tsx Full Example
+'use client';
+import { useReciters } from '@/hooks/use-reciters';
+import { useState } from 'react';
+
+export function ReciterBrowser() {
+  const { reciters, loading, error } = useReciters();
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center p-8">
+        <div className="animate-spin">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-600 p-4">
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      {reciters.map(reciter => (
+        <button
+          key={reciter.id}
+          onClick={() => setSelectedId(reciter.id)}
+          className={selectedId === reciter.id ? 'bg-blue-500' : 'bg-gray-200'}
+        >
+          <h3>{reciter.name}</h3>
+          <p>{reciter.moshaf.name}</p>
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+</CodeGroup>
+
+## UI Hooks
+
+### useEscapeKey
+
+Listens for the Escape key and triggers a callback when pressed.
+
+**Location:** `src/hooks/use-escape-key-hook.ts:6`
+
+<ParamField path="handleClose" type="() => void" required>
+  Callback function to execute when Escape key is pressed
+</ParamField>
+
+**Features:**
+- Uses `useLayoutEffect` for immediate DOM updates
+- Automatically cleans up event listener on unmount
+- Commonly used for closing modals and dialogs
+
+<CodeGroup>
+```tsx Usage
+import useEscapeKey from '@/hooks/use-escape-key-hook';
+
+export function Modal({ onClose, children }) {
+  useEscapeKey(onClose);
+
+  return (
+    <div className="modal">
+      {children}
+      <button onClick={onClose}>Close</button>
+    </div>
+  );
+}
+```
+
+```tsx Dialog Example
+'use client';
+import useEscapeKey from '@/hooks/use-escape-key-hook';
+import { useState } from 'react';
+
+export function Dialog({ isOpen, onClose, title, children }) {
+  useEscapeKey(() => {
+    if (isOpen) {
+      onClose();
+    }
+  });
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+      <div className="bg-white rounded-lg p-6 max-w-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">{title}</h2>
+          <button onClick={onClose}>×</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+```
+</CodeGroup>
