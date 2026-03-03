@@ -1,0 +1,106 @@
+{
+  "projectType": "saas",
+  "projectName": "Open Tarteel",
+  "projectDescription": "An open-source Quran audio streaming application with PWA support, advanced player controls, and multi-language interface.",
+  "theme": "almond",
+  "primaryColor": "#006341",
+  "lightColor": "#4CAF50",
+  "darkColor": "#004D32",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/audio-player",
+              "features/reciters",
+              "features/playlists",
+              "features/favorites",
+              "features/pwa",
+              "features/visualizer"
+            ]
+          },
+          {
+            "group": "User Guide",
+            "pages": [
+              "guide/using-the-app",
+              "guide/audio-controls",
+              "guide/customization",
+              "guide/keyboard-shortcuts"
+            ]
+          },
+          {
+            "group": "Technical",
+            "pages": [
+              "technical/architecture",
+              "technical/state-management",
+              "technical/api-integration",
+              "technical/pwa-setup"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "development/setup",
+              "development/building",
+              "development/contributing",
+              "development/code-structure"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/components",
+              "reference/hooks",
+              "reference/utilities",
+              "reference/types"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "PWA with offline audio caching",
+    "Advanced audio player with speed control, shuffle, and repeat modes",
+    "Multi-reciter support with playlist management",
+    "Favorites system powered by GunDB",
+    "Audio visualization with wavesurfer.js",
+    "Multi-language support (Arabic/English)",
+    "Sleep timer functionality",
+    "Fullscreen mode with media session integration",
+    "Responsive design with Tailwind CSS",
+    "State management with Jotai"
+  ],
+  "publicApiSurface": [
+    "getAllReciters(locale)",
+    "getReciter(id, moshafId, locale)",
+    "favoriteRecitersAtom",
+    "selectedReciterAtom",
+    "selectedRiwayaAtom",
+    "playbackSpeedAtom",
+    "playbackModeAtom",
+    "volumeAtom",
+    "localeAtom",
+    "useFavorites()",
+    "useReciters()",
+    "useMediaSession()",
+    "useKeyboardNavigation()",
+    "useSleepTimer()"
+  ]
+}
