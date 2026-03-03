@@ -1,0 +1,432 @@
+---
+title: Hooks Reference
+description: Custom React hooks for Open Tarteel functionality
+icon: 'anchor'
+---
+
+## Audio Hooks
+
+### useMediaSession
+
+Integrates with the browser's Media Session API for system-level media controls.
+
+**Location:** `src/hooks/use-media-session.ts:19`
+
+<ParamField path="audioRef" type="React.RefObject<HTMLAudioElement | null>" required>
+  Reference to the audio element
+</ParamField>
+
+<ParamField path="playlist" type="Playlist" required>
+  Current playlist array
+</ParamField>
+
+<ParamField path="currentTrackId" type="number" required>
+  Index of currently playing track
+</ParamField>
+
+<ParamField path="isPlaying" type="boolean" required>
+  Current playback state
+</ParamField>
+
+<ParamField path="onPlay" type="() => void" required>
+  Callback when play action triggered
+</ParamField>
+
+<ParamField path="onPause" type="() => void" required>
+  Callback when pause action triggered
+</ParamField>
+
+<ParamField path="onNext" type="() => void" required>
+  Callback when next track action triggered
+</ParamField>
+
+<ParamField path="onPrev" type="() => void" required>
+  Callback when previous track action triggered
+</ParamField>
+
+**Features:**
+- Sets media metadata (title, artist, artwork)
+- Handles system media controls (play, pause, next, previous)
+- Updates position state every second
+- Automatically cleans up on unmount
+
+<CodeGroup>
+```tsx Usage
+import { useMediaSession } from '@/hooks/use-media-session';
+import { useRef } from 'react';
+
+const audioRef = useRef<HTMLAudioElement>(null);
+
+useMediaSession({
+  audioRef,
+  playlist,
+  currentTrackId: 0,
+  isPlaying: true,
+  onPlay: () => audioRef.current?.play(),
+  onPause: () => audioRef.current?.pause(),
+  onNext: handleNextTrack,
+  onPrev: handlePreviousTrack,
+});
+```
+
+```tsx Full Example
+'use client';
+import { useMediaSession } from '@/hooks/use-media-session';
+import { useState, useRef } from 'react';
+
+export function AudioPlayer({ playlist }) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTrack, setCurrentTrack] = useState(0);
+
+  useMediaSession({
+    audioRef,
+    playlist,
+    currentTrackId: currentTrack,
+    isPlaying,
+    onPlay: () => {
+      audioRef.current?.play();
+      setIsPlaying(true);
+    },
+    onPause: () => {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    },
+    onNext: () => setCurrentTrack(prev => (prev + 1) % playlist.length),
+    onPrev: () => setCurrentTrack(prev => (prev - 1 + playlist.length) % playlist.length),
+  });
+
+  return (
+    <audio ref={audioRef} src={playlist[currentTrack]?.link} />
+  );
+}
+```
+</CodeGroup>
+
+---
+
+### useSleepTimer
+
+Manages a sleep timer that pauses playback after a specified duration.
+
+**Location:** `src/hooks/use-sleep-timer.ts:3`
+
+<ParamField path="togglePlayPause" type="() => void" required>
+  Function to pause playback when timer expires
+</ParamField>
+
+<ResponseField name="remainingTime" type="number | null">
+  Remaining time in seconds, or null if no timer is active
+</ResponseField>
+
+<ResponseField name="setSleepTimer" type="(minutes: number | 'end') => void">
+  Start a sleep timer. Pass number for minutes, or `'end'` for 120 minutes
+</ResponseField>
+
+<ResponseField name="clearSleepTimer" type="() => void">
+  Cancel the active sleep timer
+</ResponseField>
+
+**Features:**
+- Real-time countdown with 1-second updates
+- Automatic cleanup on unmount
+- Supports both fixed durations and "until end" mode
+- Pauses playback when timer expires
+
+<CodeGroup>
+```tsx Usage
+import { useSleepTimer } from '@/hooks/use-sleep-timer';
+
+const { remainingTime, setSleepTimer, clearSleepTimer } = 
+  useSleepTimer(() => audioRef.current?.pause());
+
+// Set 15 minute timer
+<button onClick={() => setSleepTimer(15)}>
+  Sleep 15m
+</button>
+
+// Set "until end" timer (120 minutes)
+<button onClick={() => setSleepTimer('end')}>
+  Until End
+</button>
+
+// Display remaining time
+{remainingTime && (
+  <span>{Math.ceil(remainingTime / 60)}m remaining</span>
+)}
+
+// Cancel timer
+<button onClick={clearSleepTimer}>Cancel</button>
+```
+</CodeGroup>
+
+---
+
+## State Management Hooks
+
+### useFavorites
+
+Manages favorite reciters with local storage and real-time sync.
+
+**Location:** `src/hooks/use-favorites.ts:11`
+
+**Parameters:** None
+
+<ResponseField name="favoriteReciters" type="string[]">
+  Array of favorite reciter IDs
+</ResponseField>
+
+<ResponseField name="favoriteCounts" type="Record<string, number>">
+  Global favorite counts for all reciters (from GunDB)
+</ResponseField>
+
+<ResponseField name="toggleFavorite" type="(favId: string) => void">
+  Add or remove a reciter from favorites
+</ResponseField>
+
+<ResponseField name="showOnlyFavorites" type="boolean">
+  Filter state for showing only favorites
+</ResponseField>
+
+<ResponseField name="setShowOnlyFavorites" type="(show: boolean) => void">
+  Toggle favorites-only filter
+</ResponseField>
+
+**Features:**
+- Syncs with GunDB for global favorite counts
+- Real-time updates via subscription
+- Persists to local storage via Jotai atom
+
+<CodeGroup>
+```tsx Usage
+import { useFavorites } from '@/hooks/use-favorites';
+import { generateFavId } from '@/utils';
+
+const { favoriteReciters, favoriteCounts, toggleFavorite } = useFavorites();
+
+const reciter = { id: 1, moshaf: { id: '5' } };
+const favId = generateFavId(reciter);
+const isFavorite = favoriteReciters.includes(favId);
+const globalCount = favoriteCounts[favId] || 0;
+
+<button onClick={() => toggleFavorite(favId)}>
+  {isFavorite ? 'Unfavorite' : 'Favorite'}
+  ({globalCount} favorites)
+</button>
+```
+</CodeGroup>
+
+---
+
+### useFilterSort
+
+Provides filtering and sorting logic for reciter lists.
+
+**Location:** `src/hooks/use-filter-sort.ts:19`
+
+<ParamField path="reciters" type="Reciter[]" required>
+  Array of all reciters to filter/sort
+</ParamField>
+
+<ParamField path="favoriteReciters" type="string[]" required>
+  Array of favorite reciter IDs
+</ParamField>
+
+<ParamField path="showOnlyFavorites" type="boolean" required>
+  Whether to show only favorites
+</ParamField>
+
+<ParamField path="favoriteCounts" type="Record<string, number>" default="{}">
+  Global favorite counts for sorting
+</ParamField>
+
+<ParamField path="viewCounts" type="Record<string, number>" default="{}">
+  View counts for sorting
+</ParamField>
+
+<ResponseField name="searchTerm" type="string">
+  Current search query
+</ResponseField>
+
+<ResponseField name="setSearchTerm" type="(term: string) => void">
+  Update search query
+</ResponseField>
+
+<ResponseField name="selectedRiwaya" type="Riwaya | 'all'">
+  Currently selected riwaya filter
+</ResponseField>
+
+<ResponseField name="setSelectedRiwaya" type="(riwaya: Riwaya | 'all') => void">
+  Change riwaya filter
+</ResponseField>
+
+<ResponseField name="sortMode" type="'popular' | 'alphabetical' | 'views'">
+  Current sort mode
+</ResponseField>
+
+<ResponseField name="setSortMode" type="(mode: string) => void">
+  Change sort mode
+</ResponseField>
+
+<ResponseField name="filteredReciters" type="Reciter[]">
+  Filtered and sorted reciter array
+</ResponseField>
+
+<ResponseField name="availableRiwiyat" type="{ value: Riwaya, label: string }[]">
+  Available riwaya options with localized labels
+</ResponseField>
+
+**Features:**
+- Search by normalized Arabic text
+- Filter by riwaya type
+- Filter by favorites
+- Sort by popularity, alphabetical, or views
+- Automatically updates when inputs change
+- Internationalized riwaya labels
+
+<CodeGroup>
+```tsx Usage
+import { useFilterSort } from '@/hooks/use-filter-sort';
+import { useFavorites } from '@/hooks/use-favorites';
+
+const { favoriteReciters, showOnlyFavorites, favoriteCounts } = useFavorites();
+const {
+  searchTerm,
+  setSearchTerm,
+  filteredReciters,
+  selectedRiwaya,
+  setSelectedRiwaya,
+  sortMode,
+  setSortMode,
+  availableRiwiyat
+} = useFilterSort({
+  reciters: allReciters,
+  favoriteReciters,
+  showOnlyFavorites,
+  favoriteCounts,
+});
+
+return (
+  <>
+    <input 
+      value={searchTerm} 
+      onChange={(e) => setSearchTerm(e.target.value)}
+      placeholder="Search reciters..."
+    />
+    
+    <select value={sortMode} onChange={(e) => setSortMode(e.target.value)}>
+      <option value="popular">Popular</option>
+      <option value="alphabetical">A-Z</option>
+      <option value="views">Most Viewed</option>
+    </select>
+
+    {filteredReciters.map(reciter => (
+      <div key={reciter.id}>{reciter.name}</div>
+    ))}
+  </>
+);
+```
+</CodeGroup>
+
+---
+
+## UI Hooks
+
+### useKeyboardNavigation
+
+Enables keyboard navigation through a list with arrow keys.
+
+**Location:** `src/hooks/use-keyboard-navigation.ts:3`
+
+<ParamField path="itemCount" type="number" required>
+  Total number of navigable items
+</ParamField>
+
+<ResponseField name="focusedIndex" type="number | null">
+  Currently focused item index
+</ResponseField>
+
+<ResponseField name="setFocusedIndex" type="(index: number | null) => void">
+  Manually set focused index
+</ResponseField>
+
+<ResponseField name="reciterRefs" type="RefObject<(HTMLElement | null)[]>">
+  Array ref for storing element references
+</ResponseField>
+
+<ResponseField name="searchInputRef" type="RefObject<HTMLInputElement | null>">
+  Ref for search input (focused on ESC)
+</ResponseField>
+
+**Features:**
+- Arrow Up/Down navigation with wraparound
+- ESC to unfocus and return to search
+- Auto-scroll focused item into view
+- Smooth scrolling behavior
+
+<CodeGroup>
+```tsx Usage
+import { useKeyboardNavigation } from '@/hooks/use-keyboard-navigation';
+
+const { 
+  focusedIndex, 
+  setFocusedIndex, 
+  reciterRefs, 
+  searchInputRef 
+} = useKeyboardNavigation(reciters.length);
+
+return (
+  <>
+    <input ref={searchInputRef} placeholder="Search..." />
+    
+    {reciters.map((reciter, index) => (
+      <button
+        key={reciter.id}
+        ref={(el) => { reciterRefs.current[index] = el; }}
+        onClick={() => setFocusedIndex(index)}
+        className={focusedIndex === index ? 'focused' : ''}
+      >
+        {reciter.name}
+      </button>
+    ))}
+  </>
+);
+```
+</CodeGroup>
+
+---
+
+### useDirection
+
+Determines text direction (LTR/RTL) based on current locale.
+
+**Location:** `src/hooks/use-direction.ts:3`
+
+**Parameters:** None
+
+<ResponseField name="isRTL" type="boolean">
+  `true` if current locale is Arabic (RTL), `false` otherwise
+</ResponseField>
+
+**Features:**
+- Uses react-intl locale context
+- Simple boolean output for conditional rendering
+
+<CodeGroup>
+```tsx Usage
+import useDirection from '@/hooks/use-direction';
+
+const { isRTL } = useDirection();
+
+return (
+  <div dir={isRTL ? 'rtl' : 'ltr'}>
+    <input 
+      style={{ 
+        textAlign: isRTL ? 'right' : 'left',
+        backgroundPosition: isRTL ? 'right' : 'left'
+      }} 
+    />
+  </div>
+);
+```
+</CodeGroup>

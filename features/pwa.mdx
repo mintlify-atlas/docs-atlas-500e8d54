@@ -1,0 +1,438 @@
+---
+title: Progressive Web App
+description: Install Open Tarteel as a native app with offline support and background playback
+icon: mobile
+---
+
+Open Tarteel is built as a Progressive Web App (PWA), providing a native app-like experience directly from your browser with offline capabilities, installability, and background playback.
+
+## Installing Open Tarteel
+
+Install Open Tarteel on any device for quick access:
+
+<Tabs>
+  <Tab title="Desktop">
+    ### Chrome/Edge/Brave
+    1. Visit Open Tarteel in your browser
+    2. Look for the install icon in the address bar
+    3. Click "Install Open Tarteel"
+    4. The app launches in its own window
+
+    ### Firefox
+    Firefox doesn't support PWA installation, but you can:
+    - Add a bookmark for quick access
+    - Use fullscreen mode for app-like experience
+  </Tab>
+  
+  <Tab title="Android">
+    1. Open Open Tarteel in Chrome or Samsung Internet
+    2. Tap the menu (⋮) in the top right
+    3. Select "Add to Home screen"
+    4. Name the app and tap "Add"
+    5. Find the icon on your home screen
+  </Tab>
+  
+  <Tab title="iOS">
+    1. Open Open Tarteel in Safari
+    2. Tap the Share button (□ with arrow)
+    3. Scroll and tap "Add to Home Screen"
+    4. Name the app and tap "Add"
+    5. Launch from your home screen
+
+    <Warning>
+      iOS has limited PWA support. Some features like background sync may not work fully.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## PWA Manifest
+
+The app manifest defines how Open Tarteel appears when installed:
+
+```typescript
+// From manifest.ts:3-13
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    id: '9a008c3173fcca3c4def71adedd5bd3f',
+    theme_color: '#000000',
+    background_color: '#000000',
+    display: 'standalone',
+    scope: '/',
+    start_url: '/',
+    name: 'Open Tarteel',
+    short_name: 'Open Tarteel',
+    description: 'Quran streaming application',
+  };
+}
+```
+
+### Manifest Features
+
+<CardGroup cols={2}>
+  <Card title="Standalone Display" icon="window-maximize">
+    Opens in its own window without browser UI
+  </Card>
+  <Card title="Theme Color" icon="palette">
+    Black theme color for status bar integration
+  </Card>
+  <Card title="App Icons" icon="icons">
+    192x192 and 512x512 icons for all devices
+  </Card>
+  <Card title="Screenshots" icon="image">
+    Desktop and mobile screenshots for app stores
+  </Card>
+</CardGroup>
+
+## Offline Support
+
+Open Tarteel works offline thanks to service worker caching:
+
+### Audio Caching
+
+Quran recitations are cached for offline playback:
+
+```typescript
+// From sw.ts:23-44
+const quranAudioCache = {
+  matcher: ({ url }: { url: URL }) => {
+    return (
+      url.hostname.endsWith('.mp3quran.net') &&
+      /^server\d+$/.test(url.hostname.split('.')[0]) &&
+      /^\d+\.mp3$/.test(url.pathname.slice(1))
+    );
+  },
+  handler: new CacheFirst({
+    cacheName: 'quran-audio',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 20,
+        maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+      }),
+      new CacheableResponsePlugin({
+        statuses: [200],
+      }),
+    ],
+  }),
+};
+```
+
+### Cache Strategy
+
+<Accordion title="Cache-First Strategy">
+  **How it works:**
+  1. Request audio file
+  2. Check if cached
+  3. Return from cache if available (instant playback)
+  4. Otherwise fetch from network
+  5. Cache the response for future use
+
+  **Benefits:**
+  - Instant playback of cached Surahs
+  - Works completely offline
+  - Reduces bandwidth usage
+  - Faster performance
+</Accordion>
+
+### Cache Limits
+
+<Info>
+The audio cache stores up to 20 Surah files for 7 days. Older or excess files are automatically removed to manage storage.
+</Info>
+
+## Service Worker
+
+The service worker enables offline functionality:
+
+```typescript
+// From sw.ts:49-57
+const serwist = new Serwist({
+  precacheEntries: self.__SW_MANIFEST,
+  skipWaiting: true,
+  clientsClaim: true,
+  navigationPreload: true,
+  runtimeCaching,
+});
+
+serwist.addEventListeners();
+```
+
+### Service Worker Features
+
+<Tabs>
+  <Tab title="Precaching">
+    Core app files are precached:
+    - HTML pages
+    - CSS stylesheets
+    - JavaScript bundles
+    - App icons and assets
+
+    These load instantly on repeat visits.
+  </Tab>
+  
+  <Tab title="Runtime Caching">
+    Dynamic content is cached at runtime:
+    - Quran audio files (Cache First)
+    - API responses (Network First)
+    - Reciter images (Cache First)
+    - Third-party resources (Stale While Revalidate)
+  </Tab>
+  
+  <Tab title="Update Handling">
+    Service worker updates are handled gracefully:
+    - Skip waiting for immediate activation
+    - Client claim for instant control
+    - User notification when update is ready
+  </Tab>
+</Tabs>
+
+## Update Notifications
+
+When a new version is available:
+
+```typescript
+// From pwa-updater.tsx:10-21
+useEffect(() => {
+  if (typeof window === 'undefined' || !('wb' in window)) {
+    return;
+  }
+
+  window.wb.addEventListener('controlling', () => {
+    globalThis.location.reload();
+  });
+
+  window.wb.addEventListener('waiting', () => setIsOpen(true));
+  window.wb.register();
+}, []);
+```
+
+### Update Flow
+
+1. **Detection** - New service worker detects update
+2. **Waiting** - Update waits in background
+3. **Notification** - User sees update dialog
+4. **Activation** - User clicks "Reload and update"
+5. **Refresh** - Page reloads with new version
+
+<Note>
+Users can choose when to update. The app continues working with the old version until they're ready to reload.
+</Note>
+
+## App Shortcuts
+
+Installed PWA includes app shortcuts:
+
+```typescript
+// From manifest.ts:72-97
+shortcuts: [
+  {
+    name: 'Contact us',
+    url: '/contact',
+    description: 'Contact us page',
+    icons: [{
+      src: 'images/shortcuts/contact.png',
+      sizes: '96x96',
+      type: 'image/png',
+    }],
+  },
+  {
+    name: 'About us',
+    url: '/about',
+    description: 'About us page',
+    icons: [{
+      src: 'images/shortcuts/about.png',
+      sizes: '96x96',
+      type: 'image/png',
+    }],
+  },
+]
+```
+
+<Info>
+Right-click the app icon (or long-press on mobile) to access shortcuts for quick navigation.
+</Info>
+
+## Media Session API
+
+Background playback controls integrate with system media controls:
+
+```typescript
+// From use-media-session.ts:31-56
+useEffect(() => {
+  if (!('mediaSession' in navigator)) return;
+
+  const track = playlist[currentTrackId];
+  if (!track || !selectedReciter) return;
+  
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: `${track.surahId} - ${surahName}`,
+    artist: selectedReciter.name,
+    album: selectedReciter.moshaf.name,
+    artwork: [{
+      src: '/images/512x512.png',
+      sizes: '512x512',
+      type: 'image/png',
+    }],
+  });
+
+  navigator.mediaSession.setActionHandler('play', onPlay);
+  navigator.mediaSession.setActionHandler('pause', onPause);
+  navigator.mediaSession.setActionHandler('previoustrack', onPrev);
+  navigator.mediaSession.setActionHandler('nexttrack', onNext);
+}, [/* deps */]);
+```
+
+### Media Controls
+
+<CardGroup cols={2}>
+  <Card title="Lock Screen" icon="lock">
+    Control playback from your lock screen
+  </Card>
+  <Card title="Notification" icon="bell">
+    Media controls in notification shade
+  </Card>
+  <Card title="Bluetooth" icon="bluetooth">
+    Car and headphone button support
+  </Card>
+  <Card title="Keyboard" icon="keyboard">
+    Media keys on keyboard work
+  </Card>
+</CardGroup>
+
+<Warning>
+iOS Safari has limited Media Session API support. Controls may not work as expected on iOS devices.
+</Warning>
+
+## Display Modes
+
+The PWA supports different display modes:
+
+<Tabs>
+  <Tab title="Standalone">
+    Default mode - app runs in its own window without browser UI. Looks and feels like a native app.
+  </Tab>
+  
+  <Tab title="Fullscreen">
+    Available on Android - can run in true fullscreen mode, hiding system UI for immersive experience.
+  </Tab>
+  
+  <Tab title="Browser">
+    Fallback - runs as normal website if PWA features aren't supported.
+  </Tab>
+</Tabs>
+
+## Launch Handling
+
+The app handles launches efficiently:
+
+```typescript
+// From manifest.ts:18-20
+launch_handler: {
+  client_mode: 'auto',
+}
+```
+
+- **Auto Mode** - Opens in existing window if already running
+- **Single Instance** - Prevents multiple app windows
+- **State Preservation** - Maintains playback state when reopened
+
+## Link Handling
+
+The PWA can handle web links:
+
+```typescript
+// From manifest.ts:21-26
+handle_links: [
+  {
+    url: 'https://tarteel.quran.us.kg',
+    action: 'navigate',
+  },
+]
+```
+
+<Info>
+Clicking Open Tarteel links opens them in the installed app rather than the browser.
+</Info>
+
+## Storage Management
+
+The PWA uses browser storage efficiently:
+
+### Storage Types
+
+<CardGroup cols={2}>
+  <Card title="Cache Storage" icon="box-archive">
+    Service worker caches for offline files
+  </Card>
+  <Card title="LocalStorage" icon="database">
+    User preferences and favorites
+  </Card>
+  <Card title="IndexedDB" icon="table">
+    GunDB distributed database
+  </Card>
+  <Card title="Session Storage" icon="clock-rotate-left">
+    Temporary session data
+  </Card>
+</CardGroup>
+
+### Storage Limits
+
+- **Audio Cache**: 20 files maximum, 7-day expiration
+- **LocalStorage**: ~5-10MB depending on browser
+- **Total Cache**: Managed by browser's storage quota
+
+<Warning>
+Browsers may clear PWA storage if device storage is low. Cache your most-listened Surahs by playing them.
+</Warning>
+
+## Platform-Specific Features
+
+### Android
+
+- Add to home screen
+- Splash screen on launch
+- System share integration
+- Background playback
+- Media notification controls
+
+### iOS
+
+- Add to home screen (Safari only)
+- Limited background playback
+- No push notifications
+- No background sync
+
+### Desktop
+
+- Window installation
+- System tray integration (Chromium)
+- Keyboard shortcuts
+- File system access (future)
+
+<Note>
+The experience is best on Android and Desktop Chrome/Edge due to full PWA support.
+</Note>
+
+## Checking PWA Status
+
+Verify PWA features are working:
+
+1. Open DevTools (F12)
+2. Go to Application tab
+3. Check:
+   - Service Worker is registered and active
+   - Cache Storage has entries
+   - Manifest is valid
+   - Installability criteria met
+
+## Benefits of PWA
+
+<Accordion title="Why PWA?">
+  - **No App Store** - Install directly from browser
+  - **Small Size** - No large download, uses browser engine
+  - **Always Updated** - Auto-updates in background
+  - **Cross-Platform** - Works on all devices
+  - **Offline First** - Works without internet
+  - **Fast** - Cached resources load instantly
+  - **Linkable** - Can be shared via URL
+  - **Secure** - HTTPS required, built-in security
+</Accordion>

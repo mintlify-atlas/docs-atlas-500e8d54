@@ -1,0 +1,353 @@
+---
+title: Utility Functions
+description: Helper functions and utilities used throughout Open Tarteel
+icon: 'wrench'
+---
+
+## Text Processing
+
+### removeTashkeel
+
+Removes Arabic diacritical marks (tashkeel) from text.
+
+**Location:** `src/utils/search.ts:1`
+
+<ParamField path="text" type="string" required>
+  Arabic text containing diacritical marks
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Text with all tashkeel removed and wasl sign normalized
+</ResponseField>
+
+**Features:**
+- Replaces wasl sign (ٱ) with regular alef (ا)
+- Removes harakat and diacritics (Unicode ranges U+064B-065F, U+0670, U+06D6-06E8)
+- Preserves base Arabic characters
+
+<CodeGroup>
+```typescript Usage
+import { removeTashkeel } from '@/utils/search';
+
+const withDiacritics = 'سُورَةُ الفَاتِحَة';
+const clean = removeTashkeel(withDiacritics);
+// Output: "سورة الفاتحة"
+```
+
+```typescript Example - Display Surah Names
+import { removeTashkeel } from '@/utils/search';
+import { SURAHS } from '@/constants';
+
+function SurahList() {
+  return SURAHS.map(surah => (
+    <div key={surah.id}>
+      {removeTashkeel(surah.name)}
+    </div>
+  ));
+}
+```
+</CodeGroup>
+
+---
+
+### normalizeArabicText
+
+Normalizes Arabic text by removing diacritics and standardizing characters for searching.
+
+**Location:** `src/utils/search.ts:17`
+
+<ParamField path="text" type="string" required>
+  Arabic text to normalize
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Normalized text suitable for comparison and search
+</ResponseField>
+
+**Transformations:**
+- Removes all tashkeel (via `removeTashkeel`)
+- Normalizes alef variants (آ، أ، إ → ا)
+- Normalizes hamza variants (ؤ، ئ → ء)
+- Normalizes ya/alif maqsura (ى → ي)
+- Removes tatweel (ـ)
+- Normalizes hamza above/below (ٔ، ٕ → ء)
+- Converts taa marbuta to haa (ة → ه)
+
+<CodeGroup>
+```typescript Usage
+import { normalizeArabicText } from '@/utils/search';
+
+const search = normalizeArabicText('محمّد');
+const name = normalizeArabicText('مُحَمَّد');
+
+if (name.includes(search)) {
+  console.log('Match found!');
+}
+```
+
+```typescript Search Example
+import { normalizeArabicText } from '@/utils/search';
+
+function searchReciters(query: string, reciters: Reciter[]) {
+  const normalizedQuery = normalizeArabicText(query);
+  
+  return reciters.filter(reciter => 
+    normalizeArabicText(reciter.name).includes(normalizedQuery)
+  );
+}
+```
+</CodeGroup>
+
+---
+
+## Formatting
+
+### formatTime
+
+Converts seconds to `MM:SS` time format.
+
+**Location:** `src/utils/format-time.ts:1`
+
+<ParamField path="seconds" type="number" required>
+  Time in seconds (can include decimals)
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Formatted time string in `M:SS` or `MM:SS` format
+</ResponseField>
+
+**Features:**
+- Floors seconds to whole numbers
+- Pads seconds with leading zero if needed
+- No hour support (assumes tracks under 60 minutes)
+
+<CodeGroup>
+```typescript Usage
+import { formatTime } from '@/utils/format-time';
+
+formatTime(45);      // "0:45"
+formatTime(125);     // "2:05"
+formatTime(3661.5);  // "61:01"
+```
+
+```tsx Display Example
+import { formatTime } from '@/utils/format-time';
+
+function AudioProgress({ currentTime, duration }) {
+  return (
+    <div>
+      {formatTime(currentTime)} / {formatTime(duration)}
+    </div>
+  );
+}
+```
+</CodeGroup>
+
+---
+
+## Styling
+
+### cn
+
+Utility for merging Tailwind CSS classes with proper precedence.
+
+**Location:** `src/utils/cn.ts:4`
+
+<ParamField path="...inputs" type="ClassValue[]" required>
+  Class names, objects, or arrays to merge
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Merged class string with Tailwind conflicts resolved
+</ResponseField>
+
+**Features:**
+- Uses `clsx` for conditional classes
+- Uses `tailwind-merge` for proper Tailwind class precedence
+- Handles strings, objects, arrays, and conditional classes
+
+<CodeGroup>
+```typescript Usage
+import { cn } from '@/utils/cn';
+
+// Basic merging
+cn('p-4', 'bg-red-500');
+// "p-4 bg-red-500"
+
+// Conditional classes
+cn('text-base', isError && 'text-red-500');
+// "text-base text-red-500" (if isError is true)
+
+// Override with proper precedence
+cn('p-4', 'p-8');
+// "p-8" (later p-8 overrides p-4)
+
+// Object syntax
+cn({
+  'bg-blue-500': isPrimary,
+  'bg-gray-500': !isPrimary
+});
+```
+
+```tsx Component Example
+import { cn } from '@/utils/cn';
+
+interface ButtonProps {
+  variant?: 'primary' | 'secondary';
+  size?: 'sm' | 'lg';
+  className?: string;
+}
+
+function Button({ variant = 'primary', size = 'sm', className }: ButtonProps) {
+  return (
+    <button
+      className={cn(
+        'rounded font-medium',
+        variant === 'primary' && 'bg-blue-500 text-white',
+        variant === 'secondary' && 'bg-gray-200 text-gray-900',
+        size === 'sm' && 'px-3 py-1 text-sm',
+        size === 'lg' && 'px-6 py-3 text-lg',
+        className
+      )}
+    />
+  );
+}
+```
+</CodeGroup>
+
+---
+
+## Data Processing
+
+### generateFavId
+
+Generates a unique identifier for a reciter-moshaf combination.
+
+**Location:** `src/utils/generate-fav-id.ts:3`
+
+<ParamField path="reciter" type="Reciter" required>
+  Reciter object containing `id` and `moshaf.id`
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Unique ID in format `{reciterId}-{moshafId}`
+</ResponseField>
+
+**Usage:**
+- Storing favorites in local storage
+- Tracking favorite counts
+- Identifying unique reciter-moshaf pairs
+
+<CodeGroup>
+```typescript Usage
+import { generateFavId } from '@/utils/generate-fav-id';
+import type { Reciter } from '@/types';
+
+const reciter: Reciter = {
+  id: 123,
+  name: 'Abdul Basit',
+  moshaf: {
+    id: '456',
+    name: 'Murattal',
+    riwaya: Riwaya.Hafs,
+    server: 'https://...',
+    surah_total: '114',
+    playlist: []
+  },
+  source: LinkSource.MP3QURAN
+};
+
+const favId = generateFavId(reciter);
+// "123-456"
+```
+
+```typescript Favorites Example
+import { generateFavId } from '@/utils/generate-fav-id';
+import { useFavorites } from '@/hooks/use-favorites';
+
+function ReciterCard({ reciter }: { reciter: Reciter }) {
+  const { favoriteReciters, toggleFavorite } = useFavorites();
+  const favId = generateFavId(reciter);
+  const isFavorite = favoriteReciters.includes(favId);
+
+  return (
+    <button onClick={() => toggleFavorite(favId)}>
+      {isFavorite ? '★' : '☆'} {reciter.name}
+    </button>
+  );
+}
+```
+</CodeGroup>
+
+---
+
+## Sharing
+
+### useShareReciter
+
+Hook for sharing reciter profiles via Web Share API or clipboard.
+
+**Location:** `src/utils/share.ts:5`
+
+**Returns:**
+
+<ResponseField name="shareReciter" type="(reciter: Reciter) => Promise<void>">
+  Async function to share a reciter
+</ResponseField>
+
+**Features:**
+- Uses native Web Share API when available
+- Falls back to clipboard copy
+- Generates shareable URL with reciter ID and moshaf ID
+- Internationalized messages
+- User feedback via alerts
+
+<CodeGroup>
+```typescript Usage
+import { useShareReciter } from '@/utils/share';
+
+function ReciterProfile({ reciter }: { reciter: Reciter }) {
+  const { shareReciter } = useShareReciter();
+
+  return (
+    <button onClick={() => shareReciter(reciter)}>
+      Share this reciter
+    </button>
+  );
+}
+```
+
+```typescript Generated URL Format
+// URL structure:
+https://tarteel.quran.us.kg/reciter/{reciterId}?moshafId={moshafId}
+
+// Example:
+https://tarteel.quran.us.kg/reciter/123?moshafId=456
+```
+</CodeGroup>
+
+---
+
+## Type Exports
+
+All utilities are exported from the main index file:
+
+**Location:** `src/utils/index.ts:1-11`
+
+```typescript
+export * from './cn';
+export * from './config';
+export * from './format-time';
+export * from './generate-fav-id';
+export * from './get-circular-replacer';
+export * from './get-error-message';
+export * from './is-valid-email';
+export * from './is-valid-magnet-uri';
+export * from './normalize-app-url';
+export * from './sanitize-html';
+export * from './search';
+```
+
+<Note>
+Some utilities listed in the index are not documented here. Additional utilities can be found in the source code at `src/utils/`.
+</Note>

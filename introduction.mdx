@@ -1,0 +1,182 @@
+---
+title: Introduction
+description: Welcome to Open Tarteel - A modern Quran audio streaming application
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.svg"
+  alt="Open Tarteel Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.svg"
+  alt="Open Tarteel Hero Dark"
+/>
+
+## Welcome to Open Tarteel
+
+Open Tarteel is an open-source Quran audio streaming application designed to provide an optimal listening experience across all platforms. Built with modern web technologies, it delivers high-quality Quran recitations with an intuitive, responsive interface.
+
+<Note>
+  Open Tarteel is completely free and open-source, licensed under MIT. Contributions from the community are always welcome!
+</Note>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card
+    title="Progressive Web App"
+    icon="mobile-screen"
+    iconType="duotone"
+  >
+    Install on any device with offline capabilities and app-like experience. Works seamlessly on desktop, mobile, and tablets.
+  </Card>
+  <Card
+    title="Advanced Audio Player"
+    icon="music"
+    iconType="duotone"
+  >
+    Full-featured player with playlist management, repeat modes, shuffle, variable playback speed, and visual audio feedback.
+  </Card>
+  <Card
+    title="Multiple Reciters"
+    icon="users"
+    iconType="duotone"
+  >
+    Access a comprehensive collection of Quran reciters with different recitation styles and multiple Moshaf options.
+  </Card>
+  <Card
+    title="Responsive Design"
+    icon="desktop"
+    iconType="duotone"
+  >
+    Beautiful interface built with Tailwind CSS that adapts perfectly to any screen size with smooth animations.
+  </Card>
+  <Card
+    title="Search & Favorites"
+    icon="star"
+    iconType="duotone"
+  >
+    Quickly find your preferred reciters and save them as favorites for easy access. Fuzzy search powered by Fuse.js.
+  </Card>
+  <Card
+    title="Media Session API"
+    icon="play"
+    iconType="duotone"
+  >
+    Control playback directly from system media controls, lock screens, and notification areas.
+  </Card>
+</CardGroup>
+
+## Technology Stack
+
+Open Tarteel is built with cutting-edge web technologies:
+
+- **Next.js 15** - React framework with server-side rendering and optimized performance
+- **React 19** - Latest React with improved concurrent features
+- **TypeScript** - Type-safe development with enhanced IDE support
+- **Jotai** - Primitive and flexible state management for React
+- **Tailwind CSS** - Utility-first CSS framework for rapid UI development
+- **PWA (Serwist)** - Progressive Web App capabilities with offline support
+- **WaveSurfer.js** - Audio visualization and waveform rendering
+
+<Info>
+  The application uses **Jotai** atoms for global state management, providing a lightweight and performant alternative to other state management solutions.
+</Info>
+
+## What Makes Open Tarteel Different?
+
+### Modern Architecture
+
+Built on Next.js 15 with the App Router, Open Tarteel leverages the latest React Server Components and streaming capabilities for optimal performance.
+
+```typescript src/app/layout.tsx
+'use client';
+import { useAtom } from 'jotai';
+import { Tajawal } from 'next/font/google';
+
+const tajawal = Tajawal({
+  weight: ['400', '700', '900'],
+  subsets: ['arabic'],
+  preload: true,
+});
+```
+
+### State Management with Jotai
+
+Simple, atomic state management that scales:
+
+```typescript
+import { atom } from 'jotai';
+
+export const selectedReciterAtom = atom(null);
+export const playbackModeAtom = atom('normal');
+export const volumeAtom = atom(1.0);
+export const playbackSpeedAtom = atom(1.0);
+```
+
+### Progressive Web App
+
+Install Open Tarteel on any device for an app-like experience with offline support:
+
+```typescript src/app/manifest.ts
+export default function manifest() {
+  return {
+    name: 'Open Tarteel',
+    short_name: 'Open Tarteel',
+    description: 'Quran streaming application',
+    display: 'standalone',
+    theme_color: '#000000',
+    background_color: '#000000',
+    start_url: '/',
+  };
+}
+```
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Daily Listening" icon="headphones">
+    Listen to your favorite Quran recitations during daily routines, commutes, or relaxation time.
+  </Card>
+  <Card title="Study & Memorization" icon="book-quran">
+    Use repeat modes and adjustable playback speed to aid in Quran memorization.
+  </Card>
+  <Card title="Offline Access" icon="wifi-slash">
+    Install as PWA and access previously played surahs even without internet connection.
+  </Card>
+  <Card title="Multi-Reciter Exploration" icon="compass">
+    Discover and compare different recitation styles from renowned Quran reciters worldwide.
+  </Card>
+</CardGroup>
+
+## Community & Support
+
+Open Tarteel is an open-source project that welcomes contributions:
+
+- **GitHub Repository**: [adelpro/open-tarteel](https://github.com/adelpro/open-tarteel)
+- **Issues & Features**: Submit on GitHub Issues
+- **Email Support**: [contact@quran.us.kg](mailto:contact@quran.us.kg)
+- **Contributing**: Check the [Contributing Guidelines](https://github.com/adelpro/open-tarteel/blob/main/CONTRIBUTING.md)
+
+## Getting Started
+
+Ready to start using or developing Open Tarteel?
+
+<CardGroup cols={2}>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Install Open Tarteel locally for development or contribution
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get up and running with Open Tarteel in minutes
+  </Card>
+</CardGroup>

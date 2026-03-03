@@ -1,0 +1,250 @@
+---
+title: 'Building and Running the Project'
+description: 'Learn how to build, test, and run Open Tarteel in different modes'
+---
+
+## Development Mode
+
+Open Tarteel provides multiple development server options for different use cases.
+
+### Standard Development Server
+
+Start the Next.js development server with hot reload:
+
+<CodeGroup>
+```bash npm
+npm run dev
+```
+
+```bash yarn
+yarn dev
+```
+</CodeGroup>
+
+The application will be available at [http://localhost:3000](http://localhost:3000).
+
+### Turbopack Development Server
+
+Use Next.js with Turbopack for faster builds and hot module replacement:
+
+<CodeGroup>
+```bash npm
+npm run dev:turbo
+```
+
+```bash yarn
+yarn dev:turbo
+```
+</CodeGroup>
+
+<Info>
+  Turbopack is Next.js's next-generation bundler, providing significantly faster refresh times during development.
+</Info>
+
+### Development with React Scan
+
+Analyze React component renders and performance:
+
+```bash
+npm run dev:scan
+```
+
+This launches React Scan at [http://localhost:3000](http://localhost:3000) to help identify performance bottlenecks.
+
+### Debug Mode with Inspector
+
+Start the development server with Node.js inspector for debugging:
+
+```bash
+npm run dev:inspect
+```
+
+You can then attach a debugger (Chrome DevTools or VS Code) to debug server-side code.
+
+## Code Quality Checks
+
+### Linting
+
+Run ESLint to check for code quality issues:
+
+<CodeGroup>
+```bash Check for issues
+npm run lint
+```
+
+```bash Auto-fix issues
+npm run lint:fix
+```
+</CodeGroup>
+
+<Note>
+  Linting is automatically run on staged files before each commit via Husky hooks.
+</Note>
+
+### Type Checking
+
+Verify TypeScript types without emitting files:
+
+```bash
+npm run type-check
+```
+
+This runs the TypeScript compiler in no-emit mode to catch type errors.
+
+### Code Formatting
+
+Format all files using Prettier:
+
+```bash
+npm run format
+```
+
+Prettier automatically formats:
+- JavaScript/TypeScript files (`.js`, `.jsx`, `.ts`, `.tsx`)
+- JSON files
+- Markdown files
+- CSS files
+
+## Building for Production
+
+<Steps>
+  <Step title="Run Production Build">
+    Create an optimized production build:
+
+    <CodeGroup>
+    ```bash npm
+    npm run build
+    ```
+
+    ```bash yarn
+    yarn build
+    ```
+    </CodeGroup>
+
+    This command:
+    - Compiles TypeScript
+    - Bundles all assets
+    - Optimizes code for production
+    - Generates static pages where possible
+    - Creates service worker for PWA
+  </Step>
+
+  <Step title="Start Production Server">
+    After building, start the production server:
+
+    <CodeGroup>
+    ```bash npm
+    npm start
+    ```
+
+    ```bash yarn
+    yarn start
+    ```
+    </CodeGroup>
+
+    The production server will run at [http://localhost:3000](http://localhost:3000).
+  </Step>
+</Steps>
+
+<Warning>
+  Always test your changes with a production build before submitting a pull request. Development and production builds can behave differently.
+</Warning>
+
+## Available Scripts
+
+Here's a complete reference of all npm scripts in the project:
+
+| Script | Description |
+|--------|-------------|
+| `dev` | Start development server |
+| `dev:turbo` | Start development server with Turbopack |
+| `dev:scan` | Start development server with React Scan |
+| `dev:inspect` | Start development server with Node.js inspector |
+| `build` | Create production build |
+| `start` | Start production server |
+| `lint` | Run ESLint checks |
+| `lint:fix` | Run ESLint and auto-fix issues |
+| `type-check` | Run TypeScript type checking |
+| `format` | Format code with Prettier |
+| `prepare` | Install Husky git hooks |
+
+## Git Hooks
+
+The project uses Husky for Git hooks to ensure code quality:
+
+### Pre-commit Hook
+
+Automatically runs before each commit:
+
+```bash
+# Runs lint-staged on staged files
+- Prettier formatting on *.{js,jsx,ts,tsx,json,md,css}
+- ESLint with auto-fix on *.{js,jsx,ts,tsx}
+```
+
+### Commit Message Hook
+
+Enforces conventional commit format using Commitlint:
+
+```
+type(scope): subject
+
+Examples:
+feat(player): add shuffle functionality
+fix(ui): resolve mobile layout issue
+docs(readme): update installation steps
+```
+
+<Info>
+  Valid commit types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`
+</Info>
+
+## Build Output
+
+After running `npm run build`, you'll find:
+
+- **`.next/`** - Next.js build output and cache
+- **`public/sw.js`** - Generated service worker for PWA
+- **`.next/static/`** - Static assets and JavaScript bundles
+
+## Performance Optimization
+
+The production build automatically includes:
+
+- **Code splitting** - Automatic route-based splitting
+- **Tree shaking** - Removes unused code
+- **Minification** - JavaScript and CSS compression
+- **Image optimization** - Automatic image optimization via Next.js
+- **Bundle analysis** - Available via `@next/bundle-analyzer`
+
+## Troubleshooting
+
+### Build Failures
+
+If the build fails:
+
+1. Clear Next.js cache:
+   ```bash
+   rm -rf .next
+   npm run build
+   ```
+
+2. Check for TypeScript errors:
+   ```bash
+   npm run type-check
+   ```
+
+3. Check for ESLint errors:
+   ```bash
+   npm run lint
+   ```
+
+### Slow Build Times
+
+- Use `dev:turbo` for faster development builds
+- Clear `.next` cache periodically
+- Check for circular dependencies
+
+<Note>
+  For more information on Next.js build optimization, see the [Next.js documentation](https://nextjs.org/docs/app/building-your-application/optimizing).
+</Note>

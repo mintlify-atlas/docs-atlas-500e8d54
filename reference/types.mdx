@@ -1,0 +1,414 @@
+---
+title: TypeScript Types
+description: Type definitions for Open Tarteel data structures
+icon: 'code'
+---
+
+## Core Types
+
+### Reciter
+
+Represents a Quran reciter with associated moshaf and metadata.
+
+**Location:** `src/types/reciter.ts:13`
+
+<ResponseField name="id" type="number" required>
+  Unique identifier for the reciter
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Reciter's name (usually in Arabic)
+</ResponseField>
+
+<ResponseField name="moshaf" type="Moshaf" required>
+  The moshaf (recitation) associated with this reciter
+</ResponseField>
+
+<ResponseField name="source" type="LinkSource" required>
+  Origin of the audio files (MP3QURAN, ISLAMHOUSE, etc.)
+</ResponseField>
+
+<CodeGroup>
+```typescript Type Definition
+type Reciter = {
+  id: number;
+  name: string;
+  moshaf: Moshaf;
+  source: LinkSource;
+};
+```
+
+```typescript Example Usage
+import type { Reciter } from '@/types';
+
+const reciter: Reciter = {
+  id: 1,
+  name: 'عبد الباسط عبد الصمد',
+  moshaf: {
+    id: '1',
+    name: 'المصحف المرتل',
+    riwaya: Riwaya.Hafs,
+    server: 'https://server.mp3quran.net/basit',
+    surah_total: '114',
+    playlist: [
+      { surahId: '1', link: 'https://server.mp3quran.net/basit/001.mp3' }
+    ]
+  },
+  source: LinkSource.MP3QURAN
+};
+```
+</CodeGroup>
+
+---
+
+### Moshaf
+
+Represents a complete Quran recitation (moshaf) with playlist information.
+
+**Location:** `src/types/reciter.ts:3`
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the moshaf
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Name/description of the moshaf
+</ResponseField>
+
+<ResponseField name="riwaya" type="Riwaya" required>
+  Quranic reading tradition (Hafs, Warsh, etc.)
+</ResponseField>
+
+<ResponseField name="server" type="string" required>
+  Base URL for audio files
+</ResponseField>
+
+<ResponseField name="surah_total" type="string" required>
+  Total number of surahs available (usually "114")
+</ResponseField>
+
+<ResponseField name="playlist" type="Playlist" required>
+  Array of playlist items with links to audio files
+</ResponseField>
+
+<CodeGroup>
+```typescript Type Definition
+type Moshaf = {
+  id: string;
+  name: string;
+  riwaya: Riwaya;
+  server: string;
+  surah_total: string;
+  playlist: Playlist;
+};
+```
+</CodeGroup>
+
+---
+
+### Playlist & PlaylistItem
+
+Represents audio tracks in a playlist.
+
+**Location:** `src/types/playlist.ts:1`
+
+<ResponseField name="surahId" type="string" required>
+  Surah number as string ("1" to "114")
+</ResponseField>
+
+<ResponseField name="link" type="string" required>
+  Direct URL to the audio file
+</ResponseField>
+
+<CodeGroup>
+```typescript Type Definition
+type PlaylistItem = {
+  surahId: string;
+  link: string;
+};
+
+type Playlist = PlaylistItem[];
+```
+
+```typescript Example
+import type { Playlist } from '@/types';
+
+const playlist: Playlist = [
+  {
+    surahId: '1',
+    link: 'https://server.mp3quran.net/basit/001.mp3'
+  },
+  {
+    surahId: '2',
+    link: 'https://server.mp3quran.net/basit/002.mp3'
+  },
+  // ... up to 114
+];
+```
+</CodeGroup>
+
+---
+
+### Surah
+
+Metadata for a Quranic surah (chapter).
+
+**Location:** `src/types/surah.ts:1`
+
+<ResponseField name="id" type="number" required>
+  Surah number (1-114)
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Arabic name of the surah
+</ResponseField>
+
+<ResponseField name="englishName" type="string" required>
+  English transliteration of the surah name
+</ResponseField>
+
+<ResponseField name="revelationType" type="'Meccan' | 'Medinan'" required>
+  Where the surah was revealed
+</ResponseField>
+
+<ResponseField name="ayahCount" type="number" required>
+  Number of verses in the surah
+</ResponseField>
+
+<CodeGroup>
+```typescript Type Definition
+type Surah = {
+  id: number;
+  name: string;
+  englishName: string;
+  revelationType: 'Meccan' | 'Medinan';
+  ayahCount: number;
+};
+```
+
+```typescript Example
+import type { Surah } from '@/types';
+
+const alFatiha: Surah = {
+  id: 1,
+  name: 'الفاتحة',
+  englishName: 'Al-Fatiha',
+  revelationType: 'Meccan',
+  ayahCount: 7
+};
+
+const alBaqarah: Surah = {
+  id: 2,
+  name: 'البقرة',
+  englishName: 'Al-Baqarah',
+  revelationType: 'Medinan',
+  ayahCount: 286
+};
+```
+</CodeGroup>
+
+---
+
+## Enums
+
+### Riwaya
+
+Quranic reading traditions (recitation methods).
+
+**Location:** `src/types/riwaya.ts:1`
+
+<ResponseField name="Hafs" type="'حفص'">
+  Most common reading (transmitted by Hafs from Asim)
+</ResponseField>
+
+<ResponseField name="Warsh" type="'ورش'">
+  Common in North Africa (transmitted by Warsh from Nafi)
+</ResponseField>
+
+<ResponseField name="Qaloon" type="'قالون'">
+  Another transmission from Nafi
+</ResponseField>
+
+<ResponseField name="Khalaf" type="'خلف'">
+  Reading of Khalaf
+</ResponseField>
+
+<ResponseField name="AlBazzi" type="'البزي'">
+  Reading of Al-Bazzi from Ibn Kathir
+</ResponseField>
+
+<ResponseField name="AlSoosi" type="'السوسي'">
+  Reading of Al-Soosi from Abu Amr
+</ResponseField>
+
+<ResponseField name="AlDooriKisai" type="'الدوري-الكسائي'">
+  Al-Doori's transmission from Al-Kisai
+</ResponseField>
+
+<ResponseField name="AlDooriAbuAmr" type="'الدوري-أبي-عمرو'">
+  Al-Doori's transmission from Abu Amr
+</ResponseField>
+
+<ResponseField name="Shuaba" type="'شعبة'">
+  Reading of Shuaba from Asim
+</ResponseField>
+
+<ResponseField name="IbnZakwan" type="'ابن-ذكوان'">
+  Reading of Ibn Zakwan from Ibn Amir
+</ResponseField>
+
+<ResponseField name="Hisham" type="'هشام'">
+  Reading of Hisham from Ibn Amir
+</ResponseField>
+
+<ResponseField name="IbnJammaz" type="'ابن-جماز'">
+  Reading of Ibn Jammaz from Abu Jafar
+</ResponseField>
+
+<ResponseField name="Yaqoub" type="'يعقوب'">
+  Reading of Yaqoub al-Hadrami
+</ResponseField>
+
+<CodeGroup>
+```typescript Type Definition
+enum Riwaya {
+  Hafs = 'حفص',
+  Warsh = 'ورش',
+  Qaloon = 'قالون',
+  Khalaf = 'خلف',
+  AlBazzi = 'البزي',
+  AlSoosi = 'السوسي',
+  AlDooriKisai = 'الدوري-الكسائي',
+  AlDooriAbuAmr = 'الدوري-أبي-عمرو',
+  Shuaba = 'شعبة',
+  IbnZakwan = 'ابن-ذكوان',
+  Hisham = 'هشام',
+  IbnJammaz = 'ابن-جماز',
+  Yaqoub = 'يعقوب',
+}
+```
+
+```typescript Usage Example
+import { Riwaya } from '@/types';
+
+function filterByRiwaya(reciters: Reciter[], riwaya: Riwaya) {
+  return reciters.filter(r => r.moshaf.riwaya === riwaya);
+}
+
+const hafsReciters = filterByRiwaya(allReciters, Riwaya.Hafs);
+const warshReciters = filterByRiwaya(allReciters, Riwaya.Warsh);
+```
+</CodeGroup>
+
+---
+
+### LinkSource
+
+Source/origin of audio files.
+
+**Location:** `src/types/link-source.ts:1`
+
+<ResponseField name="MP3QURAN" type="'mp3quran.net'">
+  Primary source for most reciters
+</ResponseField>
+
+<ResponseField name="ISLAMHOUSE" type="'islamhouse.com'">
+  Alternative audio source
+</ResponseField>
+
+<ResponseField name="INTERNETARCHIVE" type="'archive.org'">
+  Internet Archive as audio source
+</ResponseField>
+
+<ResponseField name="UNKNOWN" type="'unknown'">
+  Unknown or unspecified source
+</ResponseField>
+
+<CodeGroup>
+```typescript Type Definition
+enum LinkSource {
+  MP3QURAN = 'mp3quran.net',
+  ISLAMHOUSE = 'islamhouse.com',
+  INTERNETARCHIVE = 'archive.org',
+  UNKNOWN = 'unknown',
+}
+```
+
+```typescript Usage Example
+import { LinkSource } from '@/types';
+
+function getSourceIcon(source: LinkSource) {
+  switch (source) {
+    case LinkSource.MP3QURAN:
+      return '🎵';
+    case LinkSource.ISLAMHOUSE:
+      return '🏛️';
+    case LinkSource.INTERNETARCHIVE:
+      return '📚';
+    default:
+      return '❓';
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Additional Types
+
+### TrackType
+
+Simple track representation (alternative to PlaylistItem).
+
+**Location:** `src/types/track-type.ts:1`
+
+<ResponseField name="surahId" type="number">
+  Surah number as number (not string)
+</ResponseField>
+
+<ResponseField name="link" type="string">
+  Direct URL to audio file
+</ResponseField>
+
+<CodeGroup>
+```typescript Type Definition
+type TrackType = { 
+  surahId: number; 
+  link: string; 
+};
+```
+</CodeGroup>
+
+<Note>
+This type is similar to `PlaylistItem` but uses `number` for `surahId` instead of `string`. Check the specific component or function to see which type it expects.
+</Note>
+
+---
+
+## Type Index
+
+All types are exported from the main types index:
+
+**Location:** `src/types/index.ts:1-6`
+
+```typescript
+export * from './link-source';
+export * from './playlist';
+export * from './reciter';
+export * from './riwaya';
+export * from './surah';
+export * from './track-type';
+```
+
+<Tip>
+Always import types from `@/types` rather than individual files:
+
+```typescript
+// ✅ Good
+import { Reciter, Playlist, Riwaya } from '@/types';
+
+// ❌ Avoid
+import { Reciter } from '@/types/reciter';
+import { Playlist } from '@/types/playlist';
+```
+</Tip>

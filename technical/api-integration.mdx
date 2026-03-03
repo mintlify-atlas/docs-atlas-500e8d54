@@ -1,0 +1,498 @@
+---
+title: 'API Integration'
+description: 'MP3 Quran API integration for fetching reciter data and audio streams'
+---
+
+## MP3 Quran API
+
+Open Tarteel integrates with the [MP3Quran.net API](https://mp3quran.net/) to fetch reciter information and stream audio files.
+
+### API Overview
+
+<Card title="Base URL" icon="link">
+  ```
+  https://www.mp3quran.net/api/v3/
+  ```
+</Card>
+
+<CardGroup cols={2}>
+  <Card title="Response Format" icon="code">
+    JSON with UTF-8 encoding for Arabic text
+  </Card>
+  
+  <Card title="Authentication" icon="key">
+    No API key required (public API)
+  </Card>
+  
+  <Card title="Rate Limiting" icon="gauge">
+    No explicit rate limits documented
+  </Card>
+  
+  <Card title="Caching" icon="database">
+    Responses cached for 1 hour (3600s)
+  </Card>
+</CardGroup>
+
+## API Implementation
+
+### Core API Functions
+
+Implemented in `src/utils/api.ts`:
+
+<CodeGroup>
+```typescript src/utils/api.ts
+import { LinkSource, MP3APIMoshaf, mp3QuranAPiResponse, Reciter, Riwaya } from '@/types';
+import { Playlist } from '@/types/playlist';
+import { getRiwayaKeyFromMoshafName } from './get-riwaya-from-mushaf';
+
+// Generate playlist from moshaf surah list
+const generatePlaylist = (moshaf: MP3APIMoshaf): Playlist => {
+  const result = moshaf.surah_list.split(',').map((surahId: string) => ({
+    surahId: surahId,
+    link: `${moshaf.server}${surahId.padStart(3, '0')}.mp3`,
+  }));
+  return result;
+};
+
+// Fetch all reciters with localization
+export async function getAllReciters(
+  locale: 'ar' | 'en' = 'ar'
+): Promise<Reciter[]> {
+  try {
+    const response = await fetch(
+      `https://www.mp3quran.net/api/v3/reciters?language=${locale}`,
+      { next: { revalidate: 3600 } } // Cache for 1 hour
+    );
+
+    if (!response.ok)
+      throw new Error(`Failed to fetch reciters: ${response.status}`);
+
+    const data: mp3QuranAPiResponse = await response.json();
+    const reciters: Reciter[] = [];
+
+    // Transform API response to app format
+    for (const apiReciter of data.reciters) {
+      for (const apiMoshaf of apiReciter.moshaf) {
+        const playlist = generatePlaylist(apiMoshaf);
+        const riwayaKey = getRiwayaKeyFromMoshafName(apiMoshaf.name, locale);
+        const riwaya = Riwaya[riwayaKey];
+
+        reciters.push({
+          id: apiReciter.id,
+          name: apiReciter.name,
+          source: LinkSource.MP3QURAN,
+          moshaf: {
+            id: apiMoshaf.id,
+            name: apiMoshaf.name,
+            riwaya,
+            server: apiMoshaf.server,
+            surah_total: apiMoshaf.surah_total,
+            playlist,
+          },
+        });
+      }
+    }
+
+    return reciters;
+  } catch {
+    return []; // Return empty array on error
+  }
+}
+
+// Fetch specific reciter by ID and moshaf ID
+export async function getReciter(
+  id: number,
+  moshafId: number,
+  locale: 'ar' | 'en' = 'ar'
+): Promise<Reciter | undefined> {
+  try {
+    const response = await fetch(
+      `https://www.mp3quran.net/api/v3/reciters?language=${locale}&reciter=${id}`,
+      { next: { revalidate: 3600 } }
+    );
+
+    if (!response.ok) return undefined;
+
+    const apiRecitersData: mp3QuranAPiResponse = await response.json();
+    const apiReciter = apiRecitersData.reciters.find((r) => r.id === id);
+    if (!apiReciter) return undefined;
+
+    const apiMoshaf = apiReciter.moshaf.find(
+      (m) => m.id.toString() === moshafId.toString()
+    );
+
+    if (!apiMoshaf) return undefined;
+
+    const playlist = generatePlaylist(apiMoshaf);
+    const riwayaKey = getRiwayaKeyFromMoshafName(apiMoshaf.name, locale);
+    const riwaya = Riwaya[riwayaKey];
+    
+    return {
+      id: apiReciter.id,
+      name: apiReciter.name,
+      source: LinkSource.MP3QURAN,
+      moshaf: {
+        id: apiMoshaf.id,
+        name: apiMoshaf.name,
+        riwaya,
+        server: apiMoshaf.server,
+        surah_total: apiMoshaf.surah_total,
+        playlist,
+      },
+    };
+  } catch {
+    return undefined;
+  }
+}
+```
+</CodeGroup>
+
+### TypeScript Types
+
+<CodeGroup>
+```typescript src/types/reciter.ts
+import { LinkSource, Playlist, Riwaya } from '@/types';
+
+export type Moshaf = {
+  id: string;
+  name: string;
+  riwaya: Riwaya;
+  server: string;
+  surah_total: string;
+  playlist: Playlist;
+};
+
+export type Reciter = {
+  id: number;
+  name: string;
+  moshaf: Moshaf;
+  source: LinkSource;
+};
+
+// API Response Types
+export type MP3APIMoshaf = {
+  id: string;
+  name: string;
+  letter: string;
+  date: string;
+  server: string;
+  surah_total: string;
+  moshaf_type: string;
+  surah_list: string; // Comma-separated surah IDs
+};
+
+export type mp3QuranAPiResponse = {
+  reciters: {
+    id: number;
+    name: string;
+    moshaf: MP3APIMoshaf[];
+  }[];
+};
+```
+</CodeGroup>
+
+## API Endpoints
+
+### Get All Reciters
+
+<ParamField path="GET /reciters" type="endpoint">
+  Fetch all available reciters with their moshaf variations.
+</ParamField>
+
+<Tabs>
+  <Tab title="Request">
+    ```bash
+    GET https://www.mp3quran.net/api/v3/reciters?language=ar
+    ```
+    
+    **Query Parameters:**
+    <ResponseField name="language" type="string" default="ar">
+      Localization language: `ar` (Arabic) or `en` (English)
+    </ResponseField>
+  </Tab>
+  
+  <Tab title="Response">
+    ```json
+    {
+      "reciters": [
+        {
+          "id": 1,
+          "name": "محمود خليل الحصري",
+          "moshaf": [
+            {
+              "id": "1",
+              "name": "حفص عن عاصم",
+              "server": "https://server12.mp3quran.net/",
+              "surah_total": "114",
+              "surah_list": "1,2,3,...,114",
+              "moshaf_type": "1",
+              "letter": "م",
+              "date": "2021-01-01"
+            }
+          ]
+        }
+      ]
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Usage">
+    ```typescript
+    import { getAllReciters } from '@/utils/api';
+    
+    // Fetch Arabic reciters
+    const reciters = await getAllReciters('ar');
+    
+    // Fetch English reciters
+    const recitersEn = await getAllReciters('en');
+    ```
+  </Tab>
+</Tabs>
+
+### Get Specific Reciter
+
+<ParamField path="GET /reciters" type="endpoint">
+  Fetch a specific reciter by ID.
+</ParamField>
+
+<Tabs>
+  <Tab title="Request">
+    ```bash
+    GET https://www.mp3quran.net/api/v3/reciters?language=ar&reciter=1
+    ```
+    
+    **Query Parameters:**
+    <ResponseField name="language" type="string" default="ar">
+      Localization language
+    </ResponseField>
+    <ResponseField name="reciter" type="number" required>
+      Reciter ID
+    </ResponseField>
+  </Tab>
+  
+  <Tab title="Response">
+    Same structure as "Get All Reciters" but filtered to one reciter.
+  </Tab>
+  
+  <Tab title="Usage">
+    ```typescript
+    import { getReciter } from '@/utils/api';
+    
+    // Fetch specific reciter with moshaf
+    const reciter = await getReciter(1, 1, 'ar');
+    
+    if (reciter) {
+      console.log(reciter.name); // "محمود خليل الحصري"
+      console.log(reciter.moshaf.server); // "https://server12.mp3quran.net/"
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Audio Streaming
+
+### Audio URL Structure
+
+<CodeGroup>
+```typescript Audio URL Format
+// Format: {server}{surah_id}.mp3
+// Surah ID is zero-padded to 3 digits
+
+const server = "https://server12.mp3quran.net/";
+const surahId = 1; // Al-Fatihah
+const audioUrl = `${server}${surahId.toString().padStart(3, '0')}.mp3`;
+// Result: https://server12.mp3quran.net/001.mp3
+```
+</CodeGroup>
+
+<Expandable title="Example Audio URLs">
+  ```
+  Al-Fatihah (Surah 1):
+  https://server12.mp3quran.net/001.mp3
+  
+  Al-Baqarah (Surah 2):
+  https://server12.mp3quran.net/002.mp3
+  
+  An-Nas (Surah 114):
+  https://server12.mp3quran.net/114.mp3
+  ```
+</Expandable>
+
+### Playlist Generation
+
+The `generatePlaylist` function creates an array of audio links:
+
+<CodeGroup>
+```typescript Playlist Generation
+type Playlist = Array<{
+  surahId: string;
+  link: string;
+}>;
+
+const generatePlaylist = (moshaf: MP3APIMoshaf): Playlist => {
+  // moshaf.surah_list = "1,2,3,4,5,...,114"
+  return moshaf.surah_list.split(',').map((surahId: string) => ({
+    surahId: surahId,
+    link: `${moshaf.server}${surahId.padStart(3, '0')}.mp3`,
+  }));
+};
+
+// Example output:
+// [
+//   { surahId: "1", link: "https://server12.mp3quran.net/001.mp3" },
+//   { surahId: "2", link: "https://server12.mp3quran.net/002.mp3" },
+//   ...
+// ]
+```
+</CodeGroup>
+
+## Caching Strategy
+
+### Next.js Route Handler Cache
+
+<CodeGroup>
+```typescript Next.js Revalidation
+// Automatic ISR (Incremental Static Regeneration)
+const response = await fetch(
+  'https://www.mp3quran.net/api/v3/reciters?language=ar',
+  { 
+    next: { 
+      revalidate: 3600 // Revalidate every hour
+    } 
+  }
+);
+```
+</CodeGroup>
+
+<Note>
+  Next.js automatically caches API responses and revalidates them every 3600 seconds (1 hour). This reduces API calls and improves performance.
+</Note>
+
+### Service Worker Audio Cache
+
+Audio files are cached by the service worker (see [PWA Setup](/technical/pwa-setup)):
+
+<CodeGroup>
+```typescript sw.ts
+const quranAudioCache = {
+  matcher: ({ url }: { url: URL }) => {
+    return (
+      url.hostname.endsWith('.mp3quran.net') &&
+      /^server\d+$/.test(url.hostname.split('.')[0]) &&
+      /^\d+\.mp3$/.test(url.pathname.slice(1))
+    );
+  },
+  handler: new CacheFirst({
+    cacheName: 'quran-audio',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 20,      // Cache up to 20 audio files
+        maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+      }),
+    ],
+  }),
+};
+```
+</CodeGroup>
+
+## Error Handling
+
+<AccordionGroup>
+  <Accordion title="Network Errors">
+    Both API functions return safe fallbacks:
+    
+    ```typescript
+    // getAllReciters returns empty array on error
+    const reciters = await getAllReciters('ar');
+    // Always safe to use: reciters.map(...)
+    
+    // getReciter returns undefined on error
+    const reciter = await getReciter(1, 1);
+    if (!reciter) {
+      // Handle missing reciter
+      return <NotFound />;
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Invalid Response">
+    ```typescript
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const data = await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      return fallbackValue;
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Audio Loading Errors">
+    Audio player handles loading errors gracefully:
+    
+    ```tsx
+    <audio
+      src={currentTrack.link}
+      onError={() => {
+        // Skip to next track
+        handleNext();
+      }}
+    />
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Usage in Components
+
+### Server Component (SSR)
+
+<CodeGroup>
+```tsx app/page.tsx
+import { getAllReciters } from '@/utils/api';
+
+export default async function HomePage() {
+  // Fetch on server, cached for 1 hour
+  const reciters = await getAllReciters('ar');
+  
+  return (
+    <ReciterList reciters={reciters} />
+  );
+}
+```
+</CodeGroup>
+
+### Client Component
+
+<CodeGroup>
+```tsx components/reciter-selector.tsx
+'use client';
+import { useEffect, useState } from 'react';
+import { getAllReciters } from '@/utils/api';
+import { useAtomValue } from 'jotai';
+import { localeAtom } from '@/jotai/atom';
+
+export function ReciterSelector() {
+  const locale = useAtomValue(localeAtom);
+  const [reciters, setReciters] = useState([]);
+  
+  useEffect(() => {
+    getAllReciters(locale).then(setReciters);
+  }, [locale]);
+  
+  return (
+    <select>
+      {reciters.map(r => (
+        <option key={r.id} value={r.id}>{r.name}</option>
+      ))}
+    </select>
+  );
+}
+```
+</CodeGroup>
+
+<Check>
+  The MP3 Quran API integration provides reliable access to 500+ reciters with automatic caching and offline support.
+</Check>

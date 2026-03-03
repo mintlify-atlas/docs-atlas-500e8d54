@@ -1,0 +1,165 @@
+---
+title: 'Development Environment Setup'
+description: 'Set up your local development environment for Open Tarteel'
+---
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed on your system:
+
+- **Node.js** (version 20 or higher)
+- **npm** or **yarn** package manager
+- **Git** for version control
+
+## Getting Started
+
+<Steps>
+  <Step title="Clone the Repository">
+    Fork and clone the Open Tarteel repository to your local machine:
+
+    <CodeGroup>
+    ```bash npm
+    git clone https://github.com/your-username/open-tarteel.git
+    cd open-tarteel
+    ```
+
+    ```bash yarn
+    git clone https://github.com/your-username/open-tarteel.git
+    cd open-tarteel
+    ```
+    </CodeGroup>
+
+    <Note>
+      Replace `your-username` with your GitHub username if you forked the repository.
+    </Note>
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install all required dependencies using your preferred package manager:
+
+    <CodeGroup>
+    ```bash npm
+    npm install
+    ```
+
+    ```bash yarn
+    yarn install
+    ```
+    </CodeGroup>
+
+    This will install all dependencies listed in `package.json`, including:
+    - **Next.js** - React framework
+    - **TypeScript** - Type safety
+    - **Tailwind CSS** - Styling
+    - **Jotai** - State management
+    - **React Intl** - Internationalization
+  </Step>
+
+  <Step title="Environment Configuration">
+    Create a `.env.local` file in the root directory for environment variables:
+
+    ```bash
+    cp .env.example .env.local
+    ```
+
+    <Info>
+      The `.env.example` file contains all the necessary environment variable templates.
+    </Info>
+  </Step>
+
+  <Step title="Verify Installation">
+    Run the development server to verify everything is set up correctly:
+
+    <CodeGroup>
+    ```bash npm
+    npm run dev
+    ```
+
+    ```bash yarn
+    yarn dev
+    ```
+    </CodeGroup>
+
+    Open [http://localhost:3000](http://localhost:3000) in your browser to see the application running.
+  </Step>
+</Steps>
+
+## Development Tools
+
+### TypeScript Configuration
+
+The project uses TypeScript with strict mode enabled. Key configurations in `tsconfig.json`:
+
+- **Target**: ES2017
+- **Strict mode**: Enabled
+- **Path aliases**: Configured for cleaner imports
+
+```json
+{
+  "paths": {
+    "@/*": ["./src/*"],
+    "@components/*": ["./src/components/*"],
+    "@types/*": ["./src/types/*"],
+    "@utils/*": ["./src/utils/*"],
+    "@hooks/*": ["./src/hooks/*"],
+    "@gun/*": ["./src/gun/*"]
+  }
+}
+```
+
+### Code Quality Tools
+
+The project includes several tools to maintain code quality:
+
+- **ESLint** - Code linting with Next.js and TypeScript rules
+- **Prettier** - Code formatting
+- **Husky** - Git hooks for pre-commit checks
+- **lint-staged** - Run linters on staged files
+- **Commitlint** - Enforce conventional commit messages
+
+### Editor Setup
+
+<Info>
+  We recommend using **VS Code** with the following extensions:
+  - ESLint
+  - Prettier
+  - Tailwind CSS IntelliSense
+  - TypeScript Vue Plugin (Volar)
+</Info>
+
+The project includes VS Code settings in `.vscode/` for optimal development experience.
+
+## Common Issues
+
+<Warning>
+  If you encounter module resolution errors, try deleting `node_modules` and reinstalling:
+  
+  ```bash
+  rm -rf node_modules package-lock.json
+  npm install
+  ```
+</Warning>
+
+### Port Already in Use
+
+If port 3000 is already in use, you can specify a different port:
+
+```bash
+PORT=3001 npm run dev
+```
+
+### Type Errors
+
+Run the type checker to identify TypeScript issues:
+
+```bash
+npm run type-check
+```
+
+## Next Steps
+
+Now that your environment is set up, you can:
+
+- Learn about [building and running the project](/development/building)
+- Explore the [codebase structure](/development/code-structure)
+- Read the [contribution guidelines](/development/contributing)

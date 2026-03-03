@@ -1,0 +1,307 @@
+---
+title: 'Contribution Guidelines'
+description: 'Learn how to contribute to Open Tarteel and make an impact'
+---
+
+## Welcome Contributors!
+
+Thank you for considering contributing to **Open Tarteel**! We appreciate your help in making this project better. This guide will walk you through the contribution process.
+
+## Ways to Contribute
+
+There are many ways to contribute to Open Tarteel:
+
+- Report bugs and issues
+- Suggest new features or enhancements
+- Improve documentation
+- Submit bug fixes
+- Add new features
+- Improve code quality and performance
+- Help with translations (i18n)
+
+## Getting Started
+
+<Steps>
+  <Step title="Set Up Your Development Environment">
+    Follow the [development setup guide](/development/setup) to configure your local environment.
+  </Step>
+
+  <Step title="Find an Issue or Create One">
+    - Browse the [GitHub Issues](https://github.com/adelpro/open-tarteel/issues) page
+    - Look for issues labeled `good first issue` or `help wanted`
+    - If you have a new idea, create an issue first to discuss it
+  </Step>
+
+  <Step title="Fork and Clone">
+    Fork the repository and clone it to your local machine:
+
+    ```bash
+    git clone https://github.com/your-username/open-tarteel.git
+    cd open-tarteel
+    ```
+  </Step>
+</Steps>
+
+## Development Workflow
+
+### 1. Create a Feature Branch
+
+Always create a new branch for your work. Use a descriptive name that reflects your changes:
+
+<CodeGroup>
+```bash Feature
+git checkout -b feature/add-bookmark-functionality
+```
+
+```bash Bug Fix
+git checkout -b fix/player-volume-control
+```
+
+```bash Documentation
+git checkout -b docs/update-api-documentation
+```
+</CodeGroup>
+
+<Info>
+  Branch naming convention: `type/description-in-kebab-case`
+  
+  Common types: `feature`, `fix`, `docs`, `refactor`, `test`, `chore`
+</Info>
+
+### 2. Make Your Changes
+
+Implement your feature or fix following these guidelines:
+
+#### Code Style
+
+- Follow the existing code style and conventions
+- Use TypeScript for all new code
+- Use functional components with hooks
+- Leverage Tailwind CSS for styling
+- Use Jotai for state management
+
+<CodeGroup>
+```typescript Component Example
+import { useAtom } from 'jotai';
+import { playerStateAtom } from '@/jotai/atoms';
+
+export const MyComponent = () => {
+  const [playerState, setPlayerState] = useAtom(playerStateAtom);
+  
+  return (
+    <div className="flex items-center justify-center">
+      {/* Component content */}
+    </div>
+  );
+};
+```
+
+```typescript Utility Function
+export const formatTime = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+```
+</CodeGroup>
+
+#### Path Aliases
+
+Use configured path aliases for imports:
+
+```typescript
+// ✅ Good
+import { Button } from '@/components/button';
+import { usePlayer } from '@/hooks/usePlayer';
+import type { Reciter } from '@/types/reciter';
+
+// ❌ Avoid
+import { Button } from '../../../components/button';
+```
+
+### 3. Test Your Changes
+
+Before committing, ensure your changes work correctly:
+
+<Steps>
+  <Step title="Run Development Server">
+    ```bash
+    npm run dev
+    ```
+    Test your changes in the browser at [http://localhost:3000](http://localhost:3000)
+  </Step>
+
+  <Step title="Check Types">
+    ```bash
+    npm run type-check
+    ```
+    Ensure there are no TypeScript errors.
+  </Step>
+
+  <Step title="Run Linter">
+    ```bash
+    npm run lint:fix
+    ```
+    Fix any linting issues automatically.
+  </Step>
+
+  <Step title="Test Production Build">
+    ```bash
+    npm run build
+    npm start
+    ```
+    Verify your changes work in production mode.
+  </Step>
+</Steps>
+
+### 4. Commit Your Changes
+
+The project uses **Conventional Commits** with Commitizen support:
+
+<CodeGroup>
+```bash Stage and Commit
+git add .
+git commit -m "feat(player): add shuffle functionality"
+```
+
+```bash Using Commitizen
+git add .
+npm run commit  # Interactive commit message helper
+```
+</CodeGroup>
+
+#### Commit Message Format
+
+```
+type(scope): subject
+
+[optional body]
+
+[optional footer]
+```
+
+**Commit Types:**
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation changes
+- `style` - Code style changes (formatting, etc.)
+- `refactor` - Code refactoring
+- `perf` - Performance improvements
+- `test` - Adding or updating tests
+- `chore` - Maintenance tasks
+- `ci` - CI/CD changes
+- `build` - Build system changes
+
+**Examples:**
+```
+feat(player): add repeat one functionality
+fix(ui): resolve mobile navigation overflow
+docs(readme): update installation instructions
+refactor(hooks): simplify useAudioPlayer logic
+```
+
+<Warning>
+  Commits that don't follow the conventional format will be rejected by the commit hook.
+</Warning>
+
+### 5. Push Your Changes
+
+Push your branch to your fork:
+
+```bash
+git push origin feature/your-feature-name
+```
+
+### 6. Create a Pull Request
+
+<Steps>
+  <Step title="Open Pull Request">
+    Go to the [Open Tarteel repository](https://github.com/adelpro/open-tarteel) and click "New Pull Request".
+  </Step>
+
+  <Step title="Write Clear Description">
+    Provide a clear description of your changes:
+
+    - What does this PR do?
+    - Why are these changes needed?
+    - How did you test these changes?
+    - Screenshots (if UI changes)
+    - Related issues (use `Closes #123` or `Fixes #123`)
+  </Step>
+
+  <Step title="Wait for Review">
+    A maintainer will review your PR. Be responsive to feedback and make requested changes if needed.
+  </Step>
+</Steps>
+
+#### Pull Request Checklist
+
+Before submitting your PR, ensure:
+
+- [ ] Code follows project style guidelines
+- [ ] All tests pass (`npm run build`)
+- [ ] Type checking passes (`npm run type-check`)
+- [ ] Linting passes (`npm run lint`)
+- [ ] Commit messages follow conventional format
+- [ ] Documentation is updated (if needed)
+- [ ] Changes are tested in both development and production modes
+
+## Reporting Issues
+
+When reporting bugs or issues, please include:
+
+1. **Clear Description** - What is the problem?
+2. **Steps to Reproduce** - How can we reproduce the issue?
+3. **Expected Behavior** - What should happen?
+4. **Actual Behavior** - What actually happens?
+5. **Environment** - Browser, OS, device
+6. **Screenshots** - If applicable
+7. **Console Errors** - Any error messages
+
+<Note>
+  Use the [GitHub Issues](https://github.com/adelpro/open-tarteel/issues) page to report bugs or request features.
+</Note>
+
+## Feature Requests
+
+When suggesting new features:
+
+1. **Check Existing Issues** - Has someone already requested this?
+2. **Describe the Feature** - What functionality do you want?
+3. **Use Cases** - Why is this feature valuable?
+4. **Alternatives** - Have you considered other approaches?
+5. **Additional Context** - Mockups, examples, or references
+
+## Code Review Process
+
+All contributions go through code review:
+
+1. **Automated Checks** - Linting, type checking, build
+2. **Manual Review** - A maintainer reviews your code
+3. **Feedback** - Address any requested changes
+4. **Approval** - Once approved, your PR will be merged
+
+<Info>
+  Reviews typically happen within 2-3 business days. Be patient and responsive to feedback.
+</Info>
+
+## Community Guidelines
+
+- Be respectful and inclusive
+- Provide constructive feedback
+- Help other contributors
+- Follow the code of conduct
+- Ask questions when unsure
+
+## Questions?
+
+If you have any questions:
+
+- Open an issue on [GitHub](https://github.com/adelpro/open-tarteel/issues)
+- Contact the maintainers at [contact@quran.us.kg](mailto:contact@quran.us.kg)
+
+## Recognition
+
+All contributors are recognized in the project. Your contributions, no matter how small, are valued and appreciated!
+
+Thank you for contributing to Open Tarteel! 🎉

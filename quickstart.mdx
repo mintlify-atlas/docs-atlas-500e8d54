@@ -1,80 +1,405 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick start
+description: Get up and running with Open Tarteel in minutes
 ---
 
-## Get started in three steps
+<Note>
+  Make sure you've completed the [Installation](/installation) steps before proceeding.
+</Note>
 
-Get your documentation site running locally and make your first customization.
+## Getting started
 
-### Step 1: Set up your local environment
+Follow these steps to start using Open Tarteel:
+
+<Steps>
+  <Step title="Start the development server">
+    Run the development server with one of these commands:
+
+    <CodeGroup>
+    ```bash npm
+    npm run dev
+    ```
+    ```bash yarn
+    yarn dev
+    ```
+    ```bash pnpm
+    pnpm dev
+    ```
+    ```bash bun
+    bun dev
+    ```
+    </CodeGroup>
+
+    <Info>
+      For faster development with Turbopack, use `npm run dev:turbo`
+    </Info>
+
+    The application will start at [http://localhost:3000](http://localhost:3000)
+  </Step>
+
+  <Step title="Access the application">
+    Open your browser and navigate to `http://localhost:3000`. You'll see the main interface with:
+    
+    - **Logo/Hero section** at the top
+    - **Reciter selector** in the center
+    - **Language toggle** in the navigation
+
+    ```typescript src/app/page.tsx
+    export default function Home() {
+      const selectedReciter = useAtomValue(selectedReciterAtom);
+      
+      return (
+        <div className="flex w-full flex-col items-center justify-center gap-y-4">
+          <Logo />
+          <ReciterSelector />
+        </div>
+      );
+    }
+    ```
+  </Step>
+
+  <Step title="Select a reciter">
+    1. Click on the **Reciter Selector** button
+    2. Browse through the list of available reciters
+    3. Use the search bar to find a specific reciter by name
+    4. Filter by **Riwaya** (recitation transmission method) if desired
+    5. Sort by **Alphabetical**, **Popular**, or **Views**
+    6. Click on a reciter card to select them
+
+    <Tip>
+      You can mark reciters as favorites by clicking the star icon on their card
+    </Tip>
+  </Step>
+
+  <Step title="Choose a Moshaf">
+    Each reciter may have multiple **Moshaf** (complete Quran recordings) with different **Riwaya** styles. Select the one you prefer to start playing.
+  </Step>
+
+  <Step title="Start playing">
+    Once a reciter is selected, you'll be redirected to `/reciter/{id}?moshafId={moshafId}` where the audio player becomes active. You can now:
+    
+    - Play/pause the recitation
+    - Navigate between Surahs
+    - Adjust volume and playback speed
+    - Enable shuffle or repeat modes
+    - View the audio visualizer
+  </Step>
+</Steps>
+
+## Player controls
+
+The audio player provides comprehensive controls:
+
+### Basic controls
+
+<CardGroup cols={2}>
+  <Card title="Play/Pause" icon="play">
+    Start or pause the current Surah playback
+  </Card>
+  <Card title="Next/Previous" icon="forward">
+    Navigate between Surahs in the playlist
+  </Card>
+  <Card title="Volume" icon="volume">
+    Adjust the audio volume (0-100%)
+  </Card>
+  <Card title="Progress" icon="clock">
+    View playback progress and seek to any position
+  </Card>
+</CardGroup>
+
+### Playback modes
+
+<Tabs>
+  <Tab title="Normal">
+    Plays through the playlist in order. When the current Surah ends, it automatically plays the next one.
+  </Tab>
+  <Tab title="Repeat One">
+    Continuously repeats the current Surah. Perfect for memorization.
+  </Tab>
+  <Tab title="Shuffle">
+    Plays Surahs in random order from the playlist.
+  </Tab>
+</Tabs>
+
+```typescript src/jotai/atom.ts
+export type PlaybackMode = 'off' | 'shuffle' | 'repeat-one';
+export const playbackModeAtom = createAtomWithStorage<PlaybackMode>(
+  'playback-mode',
+  'off'
+);
+```
+
+### Advanced features
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+  <Accordion title="Playback Speed">
+    Adjust the playback speed from **0.5x** to **2x**:
+    - **1x** - Normal speed (default)
+    - **1.5x** - Faster for review
+    - **2x** - Maximum speed
+    - **0.5x** - Slower for learning
+
+    ```typescript src/jotai/atom.ts
+    export const playbackSpeedAtom = createAtomWithStorage<number>(
+      'playback-speed-value',
+      1
+    );
+    ```
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+
+  <Accordion title="Playlist Management">
+    View and manage the complete playlist of 114 Surahs:
+    - Click the playlist icon to view all Surahs
+    - Jump to any Surah directly
+    - See Surah names in Arabic or English
+  </Accordion>
+
+  <Accordion title="Audio Visualization">
+    Enable or disable the real-time audio visualizer:
+    - Toggle from the player controls
+    - Shows frequency spectrum during playback
+    - Can be disabled to improve performance
+
+    ```typescript src/jotai/atom.ts
+    export const showVisualizerAtom = createAtomWithStorage<boolean>(
+      'show-visualizer',
+      true
+    );
+    ```
+  </Accordion>
+
+  <Accordion title="Sleep Timer">
+    Set a timer to automatically pause playback:
+    - **5, 10, 15, 30, or 60 minutes**
+    - **Until End** - Stops after current Surah
+    - Perfect for bedtime listening
+
+    Access from the "More options" menu in the player controls.
   </Accordion>
 </AccordionGroup>
 
-### Step 2: Deploy your changes
+## Favorites system
+
+Save your preferred reciters for quick access:
+
+<Steps>
+  <Step title="Add to favorites">
+    Click the star icon on any reciter card to add them to your favorites
+  </Step>
+
+  <Step title="View favorites">
+    Toggle the "Show Favorites Only" filter to see only your favorited reciters
+  </Step>
+
+  <Step title="Sync across devices">
+    Favorites are stored locally and synced via GunDB, allowing you to access them across different devices (when online)
+  </Step>
+</Steps>
+
+```typescript src/jotai/atom.ts
+export const favoriteRecitersAtom = createAtomWithStorage<string[]>(
+  'favorite-reciter',
+  []
+);
+```
+
+## Media session integration
+
+Open Tarteel integrates with the **Media Session API**, allowing you to control playback from:
+
+- Lock screen controls (mobile)
+- System media controls (desktop)
+- Bluetooth/headphone controls
+- Notification area
+
+```typescript src/hooks/use-media-session.ts
+if ('mediaSession' in navigator && selectedReciter) {
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: surah?.name || 'Unknown Surah',
+    artist: selectedReciter.name,
+    album: selectedReciter.moshaf.name,
+  });
+}
+```
+
+## Fullscreen mode
+
+For an immersive experience, enable fullscreen mode:
+
+1. Click the fullscreen icon in the player controls
+2. Press **F11** (on desktop browsers)
+3. Exit with **Esc** key or the exit fullscreen button
+
+```typescript src/jotai/atom.ts
+export const fullscreenAtom = createAtomWithStorage<boolean>(
+  'fullscreen',
+  false
+);
+```
+
+## Install as PWA
+
+Open Tarteel can be installed as a Progressive Web App:
+
+<Tabs>
+  <Tab title="Desktop">
+    1. Open Open Tarteel in your browser
+    2. Look for the install icon in the address bar
+    3. Click **Install** when prompted
+    4. The app will be added to your applications
+
+    Or use the browser menu: **More Tools** → **Install Open Tarteel**
+  </Tab>
+
+  <Tab title="Mobile (Android)">
+    1. Open Open Tarteel in Chrome or Edge
+    2. Tap the menu icon (⋮)
+    3. Select **Add to Home screen** or **Install app**
+    4. Confirm the installation
+  </Tab>
+
+  <Tab title="Mobile (iOS)">
+    1. Open Open Tarteel in Safari
+    2. Tap the Share button
+    3. Scroll and select **Add to Home Screen**
+    4. Name the app and tap **Add**
+  </Tab>
+</Tabs>
+
+<Info>
+  Installing as a PWA provides offline access to previously played Surahs and an app-like experience
+</Info>
+
+## Keyboard shortcuts
+
+Speed up your workflow with keyboard shortcuts:
+
+| Shortcut | Action |
+|----------|--------|
+| **Arrow Down** | Navigate to next reciter (in selector) |
+| **Arrow Up** | Navigate to previous reciter (in selector) |
+| **Escape** | Return to search input (in selector) |
+| **F11** | Toggle fullscreen (browser) |
+
+<Note>
+  More keyboard shortcuts may be added in future updates
+</Note>
+
+## Language settings
+
+Switch between Arabic and English:
+
+1. Click the language toggle in the navigation
+2. The interface will switch immediately
+3. Arabic enables RTL (right-to-left) layout
+4. English uses LTR (left-to-right) layout
+
+```typescript src/jotai/atom.ts
+export const localeAtom = createAtomWithStorage<'ar' | 'en'>('locale', 'ar');
+```
+
+## State management
+
+Open Tarteel uses **Jotai** atoms for state management. All user preferences are automatically saved:
+
+- Selected reciter
+- Favorite reciters
+- Playback mode
+- Volume level
+- Playback speed
+- Language preference
+- Visualizer state
+- Fullscreen state
+
+```typescript
+import { useAtomValue, useSetAtom } from 'jotai';
+import { selectedReciterAtom } from '@/jotai/atom';
+
+// Read atom value
+const selectedReciter = useAtomValue(selectedReciterAtom);
+
+// Write to atom
+const setSelectedReciter = useSetAtom(selectedReciterAtom);
+```
+
+## Troubleshooting
 
 <AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+  <Accordion title="No audio playing">
+    - Check your device volume
+    - Verify the reciter's server is accessible
+    - Try refreshing the page
+    - Check browser console for errors
+  </Accordion>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Accordion title="Reciters not loading">
+    - Check your internet connection
+    - The app fetches from MP3 Quran API - ensure it's accessible
+    - Try clearing browser cache
+    - Check if you're behind a firewall blocking external APIs
+  </Accordion>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
+  <Accordion title="PWA not installing">
+    - Ensure you're using HTTPS or localhost
+    - Check browser compatibility (Chrome, Edge, Safari recommended)
+    - Clear browser data and try again
+    - Verify service worker is registered (check DevTools → Application)
+  </Accordion>
+
+  <Accordion title="Favorites not syncing">
+    - GunDB requires internet connection for sync
+    - Check browser console for GunDB connection status
+    - Favorites are stored locally first, then synced when online
+    - Try clearing GunDB cache in localStorage
   </Accordion>
 </AccordionGroup>
 
-### Step 3: Go live
+## Tips for best experience
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+<CardGroup cols={2}>
+  <Card title="Use PWA mode" icon="mobile">
+    Install as a PWA for offline access and better performance
+  </Card>
+  <Card title="Enable visualizer" icon="waveform">
+    Turn on the audio visualizer for a more engaging experience
+  </Card>
+  <Card title="Create favorites list" icon="star">
+    Mark your favorite reciters for quick access
+  </Card>
+  <Card title="Try different modes" icon="shuffle">
+    Experiment with shuffle and repeat modes for varied listening
+  </Card>
+</CardGroup>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card
+    title="Features Overview"
+    icon="sparkles"
+    href="/features/audio-player"
+  >
+    Explore all features in detail
+  </Card>
+  <Card
+    title="User Guide"
+    icon="book"
+    href="/guide/using-the-app"
+  >
+    Learn how to use the app effectively
+  </Card>
+  <Card
+    title="Technical Details"
+    icon="code"
+    href="/technical/architecture"
+  >
+    Understand the technical architecture
+  </Card>
+  <Card
+    title="Contributing"
+    icon="code-branch"
+    href="/development/contributing"
+  >
+    Contribute to Open Tarteel
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

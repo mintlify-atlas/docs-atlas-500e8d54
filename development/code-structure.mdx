@@ -1,0 +1,422 @@
+---
+title: 'Codebase Structure Overview'
+description: 'Understanding the Open Tarteel project architecture and organization'
+---
+
+## Project Overview
+
+Open Tarteel is built with **Next.js 15** using the App Router, **TypeScript**, **Tailwind CSS**, and **Jotai** for state management. The project follows modern React patterns and best practices.
+
+## Directory Structure
+
+```
+open-tarteel/
+├── .github/              # GitHub workflows and configurations
+├── .husky/               # Git hooks (pre-commit, commit-msg)
+├── .vscode/              # VS Code editor settings
+├── public/               # Static assets
+│   ├── images/          # Image assets
+│   ├── screenshots/     # App screenshots
+│   └── .well-known/     # PWA manifest and icons
+├── src/                  # Source code
+│   ├── app/             # Next.js App Router pages
+│   ├── components/      # React components
+│   ├── hooks/           # Custom React hooks
+│   ├── utils/           # Utility functions
+│   ├── types/           # TypeScript type definitions
+│   ├── constants/       # Constants and configuration
+│   ├── jotai/           # Jotai state atoms
+│   ├── gun/             # GunDB integration
+│   ├── locales/         # i18n translations
+│   ├── svgs/            # SVG components
+│   └── sw.ts            # Service worker
+├── package.json          # Dependencies and scripts
+├── tsconfig.json         # TypeScript configuration
+├── tailwind.config.ts    # Tailwind CSS configuration
+├── next.config.ts        # Next.js configuration
+└── eslint.config.mjs     # ESLint configuration
+```
+
+## Core Directories
+
+### `/src/app` - Next.js App Router
+
+Contains the application routes and pages using Next.js 13+ App Router:
+
+```
+src/app/
+├── page.tsx              # Home page (/)
+├── layout.tsx            # Root layout
+├── about/                # About page
+├── contact/              # Contact page
+├── privacy/              # Privacy policy page
+├── reciter/              # Reciter pages
+└── api/                  # API routes
+```
+
+<Info>
+  The App Router uses file-system based routing. Each folder represents a route segment.
+</Info>
+
+### `/src/components` - React Components
+
+Reusable UI components organized by functionality:
+
+```
+src/components/
+├── player.tsx                    # Main audio player
+├── player-controls.tsx           # Player control buttons
+├── playlist.tsx                  # Playlist component
+├── reciter-selector.tsx          # Reciter selection UI
+├── reciters-list.tsx            # List of available reciters
+├── reciter-card.tsx             # Individual reciter card
+├── audio-bars-visualizer.tsx    # Audio visualization
+├── language-switcher.tsx        # Language selection
+├── footer.tsx                   # Footer component
+├── hero.tsx                     # Hero section
+├── dialog.tsx                   # Dialog/modal component
+├── loader.tsx                   # Loading indicator
+├── skeleton.tsx                 # Skeleton loading states
+└── pwa-updater.tsx              # PWA update handler
+```
+
+#### Component Architecture
+
+- **Functional components** with React hooks
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+- **Jotai** for global state management
+
+<CodeGroup>
+```typescript Component Pattern
+import { useAtom } from 'jotai';
+import { someAtom } from '@/jotai/atoms';
+
+export const Component = () => {
+  const [state, setState] = useAtom(someAtom);
+  
+  return (
+    <div className="container mx-auto">
+      {/* Component JSX */}
+    </div>
+  );
+};
+```
+</CodeGroup>
+
+### `/src/hooks` - Custom React Hooks
+
+Reusable React hooks for common functionality:
+
+```
+src/hooks/
+├── useAudioPlayer.ts     # Audio player logic
+├── useLocalStorage.ts    # Local storage utilities
+├── useMediaQuery.ts      # Responsive breakpoints
+├── useOnlineStatus.ts    # Network status detection
+└── ...
+```
+
+<Note>
+  Custom hooks follow the `use` prefix convention and encapsulate reusable logic.
+</Note>
+
+### `/src/jotai` - State Management
+
+Global state atoms using Jotai:
+
+```typescript
+// Example atom structure
+import { atom } from 'jotai';
+
+export const playerStateAtom = atom({
+  isPlaying: false,
+  currentTime: 0,
+  duration: 0,
+  volume: 1,
+});
+
+export const currentReciterAtom = atom(null);
+export const playlistAtom = atom([]);
+```
+
+<Info>
+  Jotai provides a minimal and flexible state management solution with atomic updates.
+</Info>
+
+### `/src/utils` - Utility Functions
+
+Helper functions and utilities:
+
+```
+src/utils/
+├── storage/              # Storage utilities
+├── formatters.ts         # Data formatting
+├── validators.ts         # Input validation
+└── helpers.ts            # General helpers
+```
+
+### `/src/types` - TypeScript Types
+
+Type definitions for the entire application:
+
+```typescript
+// Example type definitions
+export interface Reciter {
+  id: string;
+  name: string;
+  arabicName: string;
+  url: string;
+  style: string;
+}
+
+export interface Track {
+  id: number;
+  surah: string;
+  url: string;
+  duration: number;
+}
+
+export interface PlayerState {
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  volume: number;
+  isMuted: boolean;
+}
+```
+
+### `/src/constants` - Configuration
+
+Application constants and configuration:
+
+```typescript
+// Example constants
+export const RECITERS = [
+  // List of reciters
+];
+
+export const SURAHS = [
+  // List of Quran chapters
+];
+
+export const API_ENDPOINTS = {
+  // API URLs
+};
+```
+
+### `/src/locales` - Internationalization
+
+Translation files for multiple languages:
+
+```
+src/locales/
+├── en.json               # English translations
+├── ar.json               # Arabic translations
+└── ...
+```
+
+<CodeGroup>
+```json en.json
+{
+  "common": {
+    "play": "Play",
+    "pause": "Pause",
+    "next": "Next",
+    "previous": "Previous"
+  }
+}
+```
+
+```json ar.json
+{
+  "common": {
+    "play": "تشغيل",
+    "pause": "إيقاف",
+    "next": "التالي",
+    "previous": "السابق"
+  }
+}
+```
+</CodeGroup>
+
+### `/src/gun` - GunDB Integration
+
+Decentralized database integration using GunDB for peer-to-peer data sync.
+
+### `/src/svgs` - SVG Components
+
+SVG icons as React components for better performance and customization:
+
+```typescript
+export const PlayIcon = () => (
+  <svg>...</svg>
+);
+```
+
+## Configuration Files
+
+### `tsconfig.json` - TypeScript Configuration
+
+Key TypeScript settings:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "strict": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@types/*": ["./src/types/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@gun/*": ["./src/gun/*"]
+    }
+  }
+}
+```
+
+<Info>
+  Path aliases are configured for cleaner imports throughout the project.
+</Info>
+
+### `tailwind.config.ts` - Tailwind Configuration
+
+Custom Tailwind CSS configuration for the project's design system.
+
+### `next.config.ts` - Next.js Configuration
+
+Next.js settings including:
+- PWA configuration via Serwist
+- Bundle analyzer integration
+- Image optimization settings
+- Webpack customizations (SVGR)
+
+### `eslint.config.mjs` - Linting Configuration
+
+ESLint rules including:
+- Next.js recommended rules
+- TypeScript rules
+- React rules
+- Import sorting
+- Prettier integration
+
+## Key Technologies
+
+### Frontend Framework
+- **Next.js 15** - React framework with App Router
+- **React 19** - UI library
+- **TypeScript 5** - Type safety
+
+### Styling
+- **Tailwind CSS 3** - Utility-first CSS
+- **Tailwind CSS Forms** - Form styling
+- **Tailwind CSS Typography** - Typography plugin
+- **tailwindcss-animated** - Animation utilities
+
+### State Management
+- **Jotai** - Atomic state management
+- **Jotai DevTools** - State debugging
+
+### Audio & Media
+- **WaveSurfer.js** - Audio waveform visualization
+- **react-audio-spectrum** - Audio spectrum analyzer
+
+### Internationalization
+- **react-intl** - i18n support
+
+### Database
+- **GunDB** - Decentralized database
+
+### PWA & Service Worker
+- **@serwist/next** - Service worker and PWA support
+
+### Development Tools
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
+- **Husky** - Git hooks
+- **lint-staged** - Staged files linting
+- **Commitlint** - Commit message validation
+- **Commitizen** - Interactive commit helper
+
+## Architecture Patterns
+
+### Component Patterns
+
+<CodeGroup>
+```typescript Server Component
+// app/page.tsx
+export default async function Page() {
+  const data = await fetchData();
+  return <div>{/* Render */}</div>;
+}
+```
+
+```typescript Client Component
+'use client';
+
+import { useState } from 'react';
+
+export const InteractiveComponent = () => {
+  const [state, setState] = useState();
+  return <div>{/* Interactive UI */}</div>;
+};
+```
+</CodeGroup>
+
+### State Management Pattern
+
+```typescript
+// Define atom
+import { atom } from 'jotai';
+export const playerAtom = atom({ isPlaying: false });
+
+// Use in component
+import { useAtom } from 'jotai';
+const [player, setPlayer] = useAtom(playerAtom);
+```
+
+### Styling Pattern
+
+```typescript
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+const className = twMerge(
+  clsx(
+    'base-classes',
+    condition && 'conditional-classes'
+  )
+);
+```
+
+## Build & Deployment
+
+The project builds to:
+- **`.next/`** - Next.js build output
+- **`public/sw.js`** - Service worker
+- Static and server-rendered pages
+
+<Warning>
+  The `.next` directory is git-ignored and regenerated on each build.
+</Warning>
+
+## Best Practices
+
+1. **Use TypeScript** - All new code should be typed
+2. **Use path aliases** - Import with `@/` instead of relative paths
+3. **Component composition** - Build small, reusable components
+4. **State management** - Use Jotai for shared state
+5. **Styling** - Use Tailwind utility classes
+6. **Accessibility** - Follow WCAG guidelines
+7. **Performance** - Optimize images and lazy load components
+8. **Testing** - Test in both dev and production modes
+
+## Further Reading
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [Jotai Documentation](https://jotai.org/)
+- [React Documentation](https://react.dev/)

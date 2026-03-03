@@ -1,0 +1,233 @@
+---
+title: Reciter Selection
+description: Browse, search, and select from a wide variety of Quran reciters
+icon: user
+---
+
+Open Tarteel provides access to multiple Quran reciters, each offering unique recitation styles and different Riwayat (transmission methods).
+
+## Browsing Reciters
+
+The reciter selector presents an organized list of available reciters with comprehensive information.
+
+### Reciter Cards
+
+Each reciter is displayed in a card showing:
+
+<CardGroup cols={2}>
+  <Card title="Reciter Name" icon="signature">
+    The full name of the reciter in Arabic or English
+  </Card>
+  <Card title="Riwaya" icon="book">
+    The transmission method (e.g., Hafs, Warsh, Qaloon)
+  </Card>
+  <Card title="Favorite Count" icon="star">
+    Real-time count of users who favorited this reciter
+  </Card>
+  <Card title="View Count" icon="eye">
+    Total number of times this reciter has been played
+  </Card>
+</CardGroup>
+
+<Info>
+Reciter statistics update in real-time using GunDB distributed database (reciter-card.tsx:86-93).
+</Info>
+
+## Search & Filter
+
+### Search by Name
+
+Quickly find reciters by typing their name in the search field. The search works in both Arabic and English.
+
+### Filter by Riwaya
+
+Narrow down reciters by their transmission method:
+
+<Accordion title="Common Riwayat">
+  - **Hafs** - Most common transmission
+  - **Warsh** - Popular in North Africa
+  - **Qaloon** - One of the earliest transmissions
+  - **Shu'bah** - Alternative transmission from Asim
+  - And many others...
+</Accordion>
+
+Click any Riwaya badge on a reciter card to filter the entire list by that transmission method.
+
+### Sort Options
+
+Organize the reciter list by:
+
+<Tabs>
+  <Tab title="Alphabetical">
+    Sort reciters A-Z by name (default)
+    
+    ```typescript
+    // Sorting handled by filter-sort hook
+    sort === 'alphabetical' && sorted.sort((a, b) => 
+      a.name.localeCompare(b.name)
+    )
+    ```
+  </Tab>
+  
+  <Tab title="Popular">
+    Sort by favorite count - most favorited reciters appear first
+  </Tab>
+  
+  <Tab title="Views">
+    Sort by view count - most played reciters appear first
+  </Tab>
+</Tabs>
+
+## Selecting a Reciter
+
+To start listening:
+
+1. Browse or search for your preferred reciter
+2. Click on their card to select them
+3. The player automatically loads their complete Mushaf (collection of Surahs)
+4. Begin playback with the first Surah or choose from the playlist
+
+<Note>
+Your selected reciter is saved automatically, so you'll resume where you left off on your next visit (selectedReciterAtom).
+</Note>
+
+## Reciter Information
+
+### Viewing Reciter Details
+
+Each reciter's page displays:
+
+- **Name** - Full reciter name
+- **Moshaf Name** - The specific compilation or edition
+- **Complete Playlist** - All available Surahs for that reciter
+- **Riwaya** - Transmission method used
+
+### Sharing Reciters
+
+Share your favorite reciters with others:
+
+1. Click the share icon on any reciter card
+2. Choose your preferred sharing method
+3. Share via social media, messaging apps, or copy the link
+
+```typescript
+// Share functionality from reciter-card.tsx:38-41
+const handleShare = async (event: React.MouseEvent) => {
+  event.stopPropagation();
+  shareReciter(reciter);
+};
+```
+
+## Loading Reciters
+
+Reciter data is fetched from the API based on your language preference:
+
+<Tabs>
+  <Tab title="Arabic">
+    Displays reciter names in Arabic script with Arabic metadata
+  </Tab>
+  
+  <Tab title="English">
+    Shows transliterated names and English descriptions
+  </Tab>
+</Tabs>
+
+<Info>
+The app automatically switches reciter information when you change the interface language (use-reciters.ts:19-52).
+</Info>
+
+## Favorites Integration
+
+Quickly access your favorite reciters:
+
+- Click the star icon to favorite/unfavorite a reciter
+- Toggle "Show only favorites" to filter the list
+- Favorites sync across devices using GunDB
+- Favorite counts are publicly shared and updated in real-time
+
+<Warning>
+Favorites are synced via GunDB peer network. If you clear browser data, you'll need to re-favorite your preferred reciters.
+</Warning>
+
+## Reciter Selector Component
+
+The main selector shows:
+
+- Currently selected reciter name
+- Quick access to favorite toggle
+- Share button
+- Search button to open the full selector dialog
+
+```tsx
+// From reciter-selector.tsx:44-49
+const displayedReciterName =
+  selectedReciter?.name ??
+  formatMessage({
+    id: 'reciter.select',
+    defaultMessage: 'Select A Reciter',
+  });
+```
+
+### Visual States
+
+<Accordion title="Reciter Card States">
+  - **Default** - Gray border, white background
+  - **Favorited** - Amber tinted border and background
+  - **Focused** - Blue border with ring effect for keyboard navigation
+  - **Hover** - Elevated shadow and border color change
+</Accordion>
+
+## Keyboard Navigation
+
+Navigate through reciters using your keyboard:
+
+- **Arrow Keys** - Move between reciter cards
+- **Enter/Space** - Select the focused reciter
+- **Tab** - Navigate through interactive elements
+- **Escape** - Close the reciter selector dialog
+
+## Mobile Experience
+
+On mobile devices:
+
+- Full-screen reciter selector
+- Touch-optimized card sizes
+- Smooth scrolling
+- Pull-to-refresh for updating reciter list
+- Bottom sheet style on smaller screens
+
+<Note>
+The reciter selector automatically adapts its layout based on your screen size for optimal browsing.
+</Note>
+
+## Data Persistence
+
+Reciter preferences are stored locally:
+
+- Selected reciter saved to localStorage
+- Favorite list synced via GunDB
+- Sort and filter preferences remembered
+- Last played Surah position saved
+
+All data persists across browser sessions.
+
+## API Integration
+
+Reciters are fetched from the Open Tarteel API:
+
+```typescript
+// From use-reciters.ts:22-28
+const fetchReciters = async () => {
+  try {
+    setLoading(true);
+    const data = await getAllReciters(locale);
+    setReciters(data);
+  } catch {
+    setError('Failed to load reciters');
+  }
+};
+```
+
+<Info>
+The API returns localized reciter data based on your selected language (ar/en).
+</Info>

@@ -1,0 +1,183 @@
+---
+title: Audio Player
+description: Comprehensive audio playback controls for streaming Quran recitations
+icon: play
+---
+
+The Open Tarteel audio player provides a full-featured playback experience with advanced controls for customizing your listening experience.
+
+## Core Playback Controls
+
+The player features intuitive controls for managing audio playback:
+
+<CardGroup cols={3}>
+  <Card title="Play/Pause" icon="play">
+    Toggle between playing and pausing the current recitation
+  </Card>
+  <Card title="Next Track" icon="forward">
+    Skip to the next Surah in the playlist
+  </Card>
+  <Card title="Previous Track" icon="backward">
+    Return to the previous Surah in the playlist
+  </Card>
+</CardGroup>
+
+### Playback Modes
+
+Open Tarteel supports three playback modes that can be cycled through:
+
+<Tabs>
+  <Tab title="Off (Default)">
+    Standard sequential playback through the playlist. When a Surah ends, the next one begins automatically.
+    
+    <Info>
+      This is the default mode when you first start using Open Tarteel.
+    </Info>
+  </Tab>
+  
+  <Tab title="Shuffle">
+    Randomizes the playback order of Surahs. Each track is played once before the cycle repeats with a new shuffle order.
+    
+    ```typescript
+    // Shuffle implementation from player.tsx:58-68
+    const shufflePlaylist = useCallback(() => {
+      const indices = Array.from({ length: playlist.length }, (_, index) => index);
+      for (let index = indices.length - 1; index > 0; index--) {
+        const index_ = Math.floor(Math.random() * (index + 1));
+        [indices[index], indices[index_]] = [indices[index_], indices[index]];
+      }
+      setShuffledIndices(indices);
+    }, [playlist.length]);
+    ```
+  </Tab>
+  
+  <Tab title="Repeat One">
+    Continuously repeats the current Surah. When the track ends, it automatically restarts from the beginning.
+    
+    <Note>
+      Perfect for memorization or focused listening to specific Surahs.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Playback Speed Control
+
+Adjust the recitation speed to match your preference:
+
+- **1x** - Normal speed (default)
+- **1.5x** - 50% faster
+- **2x** - Double speed
+
+Click the speed control button to cycle through these options. A badge appears on the control when playing at non-standard speeds.
+
+<Info>
+Playback speed is persisted across sessions using browser storage (player-controls.tsx:139-143).
+</Info>
+
+## Volume Control
+
+The volume slider provides precise audio level adjustment:
+
+1. Click the volume icon to reveal the vertical slider
+2. Drag the slider or click to set your desired volume
+3. Click the volume icon again to mute/unmute
+
+Volume settings are saved automatically and persist across sessions.
+
+## Progress Bar & Seeking
+
+The audio progress bar shows:
+- Current playback position
+- Total track duration
+- Visual progress indicator
+
+You can click or drag anywhere on the progress bar to jump to a specific timestamp in the recitation.
+
+## Sleep Timer
+
+Set an automatic stop time for your listening session:
+
+<Accordion title="Available Timer Options">
+  - **5 minutes**
+  - **10 minutes**
+  - **15 minutes**
+  - **30 minutes**
+  - **60 minutes**
+  - **Until end** - Stops after the current Surah completes
+
+  When active, a countdown indicator appears showing remaining time.
+</Accordion>
+
+<Note>
+The sleep timer automatically pauses playback when the time expires (use-sleep-timer.ts:29-39).
+</Note>
+
+## Fullscreen Mode
+
+Expand the player to fullscreen for an immersive listening experience:
+
+- Click the fullscreen icon to enter
+- Press `ESC` key to exit
+- In fullscreen mode, the interface simplifies to focus on the player
+
+<Info>
+Fullscreen preference is saved to your browser storage.
+</Info>
+
+## Keyboard Shortcuts
+
+The player integrates with your browser's media keys for convenient control:
+
+| Action | Control |
+|--------|--------|
+| Play/Pause | Media play/pause key |
+| Next Track | Media next key |
+| Previous Track | Media previous key |
+
+<Note>
+Keyboard controls work even when the browser tab is in the background (use-media-session.ts:52-55).
+</Note>
+
+## Technical Features
+
+### Audio Element Configuration
+
+The player uses HTML5 audio with optimized settings:
+
+```tsx
+<audio
+  ref={audioRef}
+  id="audio"
+  onTimeUpdate={handleTimeUpdate}
+  onDurationChange={handleTimeUpdate}
+  onEnded={handleTrackEnded}
+  src={playlist[currentTrack]?.link}
+  preload="auto"
+  crossOrigin="anonymous"
+/>
+```
+
+### State Management
+
+Player state is managed with Jotai atoms for reactive updates:
+
+- `currentTimeAtom` - Current playback position
+- `playbackSpeedAtom` - Speed multiplier (1, 1.5, or 2)
+- `playbackModeAtom` - Mode (off, shuffle, repeat-one)
+- `volumeAtom` - Volume level (0-1)
+- `fullscreenAtom` - Fullscreen state
+
+All states persist across sessions using localStorage.
+
+## Mobile Optimizations
+
+The player adapts to mobile devices:
+
+- Touch-optimized controls
+- Responsive layout adjustments
+- More menu for additional controls on small screens
+- Native media notification support
+
+<Warning>
+Some browser features like fullscreen may have limited support on iOS devices due to browser restrictions.
+</Warning>

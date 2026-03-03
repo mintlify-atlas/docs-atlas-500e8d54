@@ -1,0 +1,261 @@
+---
+title: Playlists
+description: Manage and navigate through Surah playlists for each reciter
+icon: list
+---
+
+Each reciter in Open Tarteel comes with a complete playlist of Quran Surahs. The playlist system allows you to view, navigate, and select specific Surahs for playback.
+
+## Viewing the Playlist
+
+Access the playlist for the current reciter by clicking the playlist icon in the player controls.
+
+<Info>
+The playlist dialog shows all 114 Surahs available for the selected reciter's Mushaf.
+</Info>
+
+## Playlist Display
+
+Each Surah in the playlist shows:
+
+<CardGroup cols={2}>
+  <Card title="Surah Number" icon="hashtag">
+    Position in the Quran (1-114)
+  </Card>
+  <Card title="Surah Name" icon="book-quran">
+    Arabic name or English transliteration
+  </Card>
+  <Card title="Ayah Count" icon="list-ol">
+    Number of verses in the Surah
+  </Card>
+  <Card title="Track Number" icon="music">
+    Sequential position in the playlist
+  </Card>
+</CardGroup>
+
+### Playlist Item Structure
+
+From the source code, each playlist item contains:
+
+```typescript
+// From playlist.tsx:8-9
+type PlaylistItem = {
+  surahId: string;  // Surah number (1-114)
+  link: string;     // Audio file URL
+}
+```
+
+## Selecting a Surah
+
+To play a specific Surah from the playlist:
+
+1. Click the playlist icon in the player controls
+2. Browse through the list of Surahs
+3. Click on any Surah to start playing it
+4. The dialog closes automatically and playback begins
+
+```typescript
+// From playlist.tsx:19-22
+const handlePlaylistItemClick = (index: number) => {
+  setIsOpen(false);
+  setCurrentTrack(index);
+};
+```
+
+<Note>
+When you select a Surah from the playlist, playback continues sequentially from that point based on your selected playback mode.
+</Note>
+
+## Playlist Features
+
+### Language Support
+
+The playlist adapts to your selected language:
+
+<Tabs>
+  <Tab title="Arabic">
+    - Displays Surah names in Arabic script
+    - Shows "آية" or "آيات" for verse count
+    - Right-to-left text layout
+  </Tab>
+  
+  <Tab title="English">
+    - Shows transliterated Surah names
+    - Displays "Aya" or "Ayas" for verse count
+    - Left-to-right text layout
+  </Tab>
+</Tabs>
+
+```typescript
+// From playlist.tsx:52-54
+{isEnglish
+  ? surah.englishName
+  : removeTashkeel(surah.name)}
+```
+
+### Visual Design
+
+<Accordion title="Playlist Item Styling">
+  Each playlist item features:
+  - Rounded number badge showing track position
+  - Hover effect with background color change
+  - Bottom border separator
+  - Smooth transition animations
+  - Click cursor indicator
+  - Responsive padding and spacing
+</Accordion>
+
+## Surah Information
+
+The playlist integrates with the Surah constants to display accurate information:
+
+```typescript
+// From playlist.tsx:36-37
+const surahIndex = Number.parseInt(item.surahId) - 1;
+const surah = SURAHS[surahIndex];
+```
+
+Each Surah entry includes:
+- **ID** - Unique Surah number
+- **Name** - Arabic name
+- **English Name** - Transliterated name
+- **Ayah Count** - Number of verses
+
+## Playlist Dialog
+
+The playlist appears in a modal dialog overlay:
+
+<CardGroup cols={2}>
+  <Card title="Opening" icon="folder-open">
+    Click the playlist button in player controls
+  </Card>
+  <Card title="Closing" icon="xmark">
+    Click outside, press ESC, or select a Surah
+  </Card>
+</CardGroup>
+
+### Dialog Features
+
+- **Scrollable List** - Scroll through all 114 Surahs
+- **Touch Optimized** - Smooth scrolling on mobile
+- **Auto-close** - Closes when you select a track
+- **Keyboard Accessible** - Navigate with arrow keys
+
+## Playlist Navigation
+
+The player automatically handles playlist navigation:
+
+### Sequential Playback
+
+In normal mode, tracks play in order:
+
+```typescript
+// From player.tsx:116-123
+const getNextTrackIndex = (index: number) => {
+  if (playbackMode === 'shuffle') {
+    return shuffledIndices[(shuffledIndices.indexOf(index) + 1) % playlist.length];
+  }
+  return (index + 1) % playlist.length;
+};
+```
+
+### Shuffle Mode
+
+When shuffle is enabled:
+- Playlist order is randomized
+- Each track plays once before reshuffling
+- Next/previous buttons respect the shuffled order
+
+### Repeat One Mode
+
+When repeat one is active:
+- Current track loops indefinitely
+- Next/previous buttons still allow manual navigation
+- Playlist maintains position for when you exit repeat mode
+
+## Track Loading
+
+When a new track is selected:
+
+```typescript
+// From player.tsx:78-92
+useEffect(() => {
+  const previousTrack = previousTrackRef.current;
+  previousTrackRef.current = currentTrack;
+
+  if (typeof currentTrack !== 'number') return;
+  if (previousTrack === currentTrack) return;
+
+  setCurrentTime(0);
+  if (audioRef.current) {
+    audioRef.current.currentTime = 0;
+    if (isPlaying) {
+      void audioRef.current.play();
+    }
+  }
+}, [currentTrack, isPlaying, setCurrentTime]);
+```
+
+<Info>
+Track changes are seamless - the player resets the time and begins playing the new Surah automatically if playback was active.
+</Info>
+
+## Playlist Metadata
+
+Each reciter's Mushaf includes a complete playlist:
+
+- **playlist** - Array of all available tracks
+- **moshaf.name** - Name of the specific compilation
+- **moshaf.riwaya** - Transmission method used
+
+### Accessing Playlist Data
+
+```typescript
+// From reciter-page.tsx:42-44
+{selectedReciter?.moshaf && (
+  <Player playlist={selectedReciter.moshaf.playlist} />
+)}
+```
+
+## Mobile Playlist View
+
+On mobile devices:
+
+- Full-screen dialog
+- Larger touch targets
+- Optimized scrolling performance
+- Bottom sheet animation
+- Swipe to dismiss gesture
+
+<Warning>
+The playlist displays only the Surahs available for the currently selected reciter. Switching reciters will load a different playlist.
+</Warning>
+
+## Playlist State Management
+
+Playlist state is managed at the component level:
+
+```typescript
+// From player.tsx:34-36
+const [currentTrack, setCurrentTrack] = useState<number | undefined>(0);
+const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
+const [isOpen, setIsOpen] = useState(false);
+```
+
+- **currentTrack** - Currently playing Surah index
+- **shuffledIndices** - Randomized order for shuffle mode
+- **isOpen** - Playlist dialog visibility state
+
+## Integration with Player
+
+The playlist integrates seamlessly with player features:
+
+- Respects playback mode (shuffle, repeat)
+- Updates Media Session API with track info
+- Maintains position during speed changes
+- Syncs with volume and other settings
+- Preserves queue when changing modes
+
+<Note>
+The current track position is persisted to localStorage, so you'll resume at the same Surah when you return (currentTimeAtom).
+</Note>

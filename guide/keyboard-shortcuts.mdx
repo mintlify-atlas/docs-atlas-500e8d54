@@ -1,0 +1,324 @@
+---
+title: Keyboard Shortcuts
+description: Navigate Open Tarteel efficiently using keyboard shortcuts for reciter selection and playback control
+icon: keyboard
+---
+
+Open Tarteel supports keyboard navigation to help you browse and control the app efficiently without a mouse. Master these shortcuts to enhance your workflow.
+
+## Reciter List Navigation
+
+The reciter list supports full keyboard navigation for quick browsing:
+
+### Arrow Keys
+
+<AccordionGroup>
+  <Accordion title="Arrow Down" icon="arrow-down">
+    **Action**: Move focus to the next reciter in the list
+    
+    **Behavior**:
+    - If no item is focused, focuses the first reciter
+    - If the last item is focused, wraps to the first reciter
+    - Automatically scrolls the focused item into view
+    - Smooth scrolling animation for better visual tracking
+    
+    **Implementation**: `src/hooks/use-keyboard-navigation.ts:18-23`
+    
+    ```typescript
+    case 'ArrowDown':
+      event.preventDefault();
+      setFocusedIndex((previous) =>
+        previous === null || previous === itemCount - 1 
+          ? 0 
+          : previous + 1
+      );
+    ```
+  </Accordion>
+
+  <Accordion title="Arrow Up" icon="arrow-up">
+    **Action**: Move focus to the previous reciter in the list
+    
+    **Behavior**:
+    - If no item is focused, focuses the last reciter
+    - If the first item is focused, wraps to the last reciter
+    - Automatically scrolls the focused item into view
+    - Smooth scrolling animation
+    
+    **Implementation**: `src/hooks/use-keyboard-navigation.ts:25-30`
+    
+    ```typescript
+    case 'ArrowUp':
+      event.preventDefault();
+      setFocusedIndex((previous) =>
+        previous === null || previous === 0 
+          ? itemCount - 1 
+          : previous - 1
+      );
+    ```
+  </Accordion>
+
+  <Accordion title="Escape" icon="xmark">
+    **Action**: Return focus to the search input field
+    
+    **Behavior**:
+    - Clears current focus from reciter list
+    - Focuses the search input at the top of the page
+    - Allows immediate typing to search for reciters
+    - Does not close any open menus or modals
+    
+    **Implementation**: `src/hooks/use-keyboard-navigation.ts:32-36`
+    
+    ```typescript
+    case 'Escape':
+      setFocusedIndex(null);
+      searchInputRef.current?.focus();
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Keyboard navigation is implemented in `useKeyboardNavigation` hook and automatically prevents default browser scrolling behavior for arrow keys.
+</Note>
+
+## Navigation Features
+
+### Auto-Scrolling
+
+When you navigate with arrow keys, the focused reciter automatically scrolls into view:
+
+```typescript
+reciterReferences.current[focusedIndex]?.scrollIntoView({
+  behavior: 'smooth',
+  block: 'nearest',
+  inline: 'start',
+});
+```
+
+**Scroll Behavior**:
+- **Smooth**: Animated scrolling for better visual tracking
+- **Block: nearest**: Minimal scrolling - only scrolls if item is out of view
+- **Inline: start**: Aligns to the start edge for RTL/LTR support
+
+<Tip>
+  The smart scrolling algorithm only scrolls when necessary, keeping the interface stable while ensuring the focused item is always visible.
+</Tip>
+
+### Focus Management
+
+The keyboard navigation system manages focus state:
+
+- **Focused Index**: Tracks which reciter is currently focused (0-based index or null)
+- **Reciter Refs**: Array of references to reciter button elements
+- **Search Input Ref**: Reference to the search input field for Escape key
+
+**State Management**:
+```typescript
+const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+```
+
+### Circular Navigation
+
+Arrow key navigation wraps around at list boundaries:
+
+- **At Bottom**: Arrow Down wraps to the first item
+- **At Top**: Arrow Up wraps to the last item
+- **No Selection**: First arrow key focuses appropriate end of list
+
+<Note>
+  Circular navigation ensures you can quickly reach any reciter regardless of list length.
+</Note>
+
+## Browser Shortcuts
+
+Standard browser keyboard shortcuts also work in Open Tarteel:
+
+### Fullscreen
+
+| Shortcut | Action |
+|----------|--------|
+| `F11` | Toggle fullscreen mode (Windows/Linux) |
+| `Fn + F11` | Toggle fullscreen mode (macOS) |
+| `Escape` | Exit fullscreen mode (all platforms) |
+
+<Warning>
+  Browser fullscreen (F11) is different from the app's fullscreen mode. Browser fullscreen removes all browser UI, while app fullscreen simplifies the player interface but keeps the browser chrome.
+</Warning>
+
+### Page Navigation
+
+| Shortcut | Action |
+|----------|--------|
+| `Space` | Scroll down one page |
+| `Shift + Space` | Scroll up one page |
+| `Home` | Scroll to top of page |
+| `End` | Scroll to bottom of page |
+| `Page Up` | Scroll up one viewport |
+| `Page Down` | Scroll down one viewport |
+
+### Search and Selection
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl/Cmd + F` | Open browser's find-in-page |
+| `Tab` | Move focus to next interactive element |
+| `Shift + Tab` | Move focus to previous interactive element |
+| `Enter` | Activate focused button or link |
+
+<Tip>
+  Use Tab/Shift+Tab to navigate through player controls and buttons when not using the custom arrow key navigation.
+</Tip>
+
+## Accessibility Features
+
+Keyboard navigation enhances accessibility:
+
+### Screen Reader Support
+
+- All interactive elements have proper ARIA labels
+- Focus changes are announced by screen readers
+- Current state (playing, paused, etc.) is accessible
+- Button purposes are clearly labeled
+
+**Example ARIA Labels**:
+```tsx
+aria-label={isPlaying ? messages.pause : messages.play}
+aria-label={messages.nextTrack}
+aria-label={messages.previousTrack}
+```
+
+### Keyboard-Only Operation
+
+The entire app can be operated without a mouse:
+
+<Steps>
+  <Step title="Navigate Reciters">
+    Use Arrow Up/Down to browse the reciter list
+  </Step>
+
+  <Step title="Select Reciter">
+    Press Enter when focused on a reciter to select them
+  </Step>
+
+  <Step title="Control Playback">
+    Tab to player controls and use Enter/Space to activate buttons
+  </Step>
+
+  <Step title="Search">
+    Press Escape to return to search field and type to filter reciters
+  </Step>
+</Steps>
+
+### Visual Focus Indicators
+
+Focused elements display clear visual indicators:
+
+- Outline or border on focused interactive elements
+- Different styling for keyboard focus vs mouse hover
+- High contrast focus indicators for visibility
+- Focus rings respect system preferences
+
+<Note>
+  Focus indicators follow accessibility guidelines for contrast ratios and visibility.
+</Note>
+
+## Implementation Details
+
+### Hook: useKeyboardNavigation
+
+**Location**: `src/hooks/use-keyboard-navigation.ts`
+
+**Parameters**:
+- `itemCount: number` - Total number of reciters in the list
+
+**Returns**:
+```typescript
+{
+  focusedIndex: number | null;           // Current focused index
+  setFocusedIndex: (index: number | null) => void;  // Focus setter
+  reciterRefs: RefObject<(HTMLElement | null)[]>;   // Reciter elements
+  searchInputRef: RefObject<HTMLInputElement | null>; // Search input
+}
+```
+
+### Event Handling
+
+Keyboard events are handled at the window level:
+
+```typescript
+window.addEventListener('keydown', handleKeyDown);
+```
+
+**Benefits**:
+- Works regardless of which element has focus
+- Consistent behavior across the entire app
+- Properly cleaned up on component unmount
+
+<Warning>
+  The keyboard handler returns early if `itemCount === 0` to prevent errors when the reciter list is empty.
+</Warning>
+
+### Focus Effects
+
+Focus changes trigger effects to update the UI:
+
+```typescript
+useEffect(() => {
+  if (focusedIndex !== null) {
+    reciterReferences.current[focusedIndex]?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'start',
+    });
+    reciterReferences.current[focusedIndex]?.focus();
+  }
+}, [focusedIndex]);
+```
+
+**Effect Actions**:
+1. Scrolls focused element into view
+2. Applies browser focus to the element
+3. Only runs when focus index changes
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Fast Navigation" icon="rabbit">
+    Use Arrow keys for quick browsing through reciters instead of scrolling and clicking
+  </Card>
+  
+  <Card title="Quick Search" icon="magnifying-glass">
+    Press Escape from anywhere to jump to search and filter the list
+  </Card>
+  
+  <Card title="Fullscreen Focus" icon="expand">
+    Press F11 for fullscreen mode when you want distraction-free listening
+  </Card>
+  
+  <Card title="Combine Methods" icon="hand-pointer">
+    Mix keyboard and mouse navigation - use whatever feels most efficient
+  </Card>
+</CardGroup>
+
+<Tip>
+  Power users can navigate the entire app using only the keyboard: Arrow keys for list navigation, Enter to select, Tab for controls, and Space to play/pause.
+</Tip>
+
+## Future Shortcuts
+
+While not currently implemented, these shortcuts would enhance the experience:
+
+| Proposed Shortcut | Suggested Action |
+|-------------------|------------------|
+| `Space` | Play/Pause toggle |
+| `→` (Right Arrow) | Next track (when not in list) |
+| `←` (Left Arrow) | Previous track (when not in list) |
+| `M` | Mute/unmute volume |
+| `F` | Toggle fullscreen |
+| `V` | Toggle visualizer |
+| `L` | Toggle playlist |
+| `+/-` | Increase/decrease volume |
+| `0-9` | Jump to percentage of track |
+
+<Note>
+  These shortcuts could be added in future versions. Consider contributing to the project if you'd like to implement them!
+</Note>

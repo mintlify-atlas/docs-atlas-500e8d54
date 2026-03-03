@@ -1,0 +1,295 @@
+---
+title: Customization
+description: Personalize your Open Tarteel experience with language, theme, visualizer, and display options
+icon: palette
+---
+
+Open Tarteel offers various customization options to tailor the app to your preferences. All settings are saved locally and persist across sessions.
+
+## Language Settings
+
+Open Tarteel supports multiple languages for the interface:
+
+### Available Languages
+
+- **Arabic (ar)**: Native right-to-left (RTL) interface
+- **English (en)**: Left-to-right (LTR) interface
+
+### Changing Language
+
+The language setting is stored in the `localeAtom` and affects:
+- UI text and labels
+- Button descriptions
+- Menu items
+- Tooltips
+- Date and time formatting
+
+<Note>
+  Language preference is stored locally in your browser. The app automatically uses your selected language when you return.
+</Note>
+
+### RTL Support
+
+When Arabic is selected:
+- The entire interface flips to right-to-left layout
+- Control buttons reorder appropriately
+- Text alignment adjusts automatically
+- Navigation follows RTL conventions
+
+<Tip>
+  The app uses react-intl for internationalization, ensuring proper text formatting and pluralization for each language.
+</Tip>
+
+## Display Options
+
+### Fullscreen Mode
+
+Fullscreen mode provides an immersive, distraction-free listening experience.
+
+#### Enabling Fullscreen
+
+<Steps>
+  <Step title="Desktop Method">
+    Click the fullscreen icon (expand arrows) in the control bar
+  </Step>
+
+  <Step title="Mobile Method">
+    Tap the "More" menu (⋯) and select the fullscreen option
+  </Step>
+
+  <Step title="Browser Toggle">
+    Most browsers support F11 or Fn+F11 for fullscreen mode
+  </Step>
+</Steps>
+
+#### Fullscreen Features
+
+**Simplified Interface**:
+- Only essential playback controls visible
+- Larger, centered play/pause button
+- Previous and next track buttons
+- Minimalist design for focus
+
+**Browser Fullscreen**:
+- Removes browser chrome (address bar, tabs)
+- Maximizes screen real estate
+- Ideal for projection or large displays
+
+<Note>
+  The fullscreen state is persisted in `fullscreenAtom` and restored when you return to the app.
+</Note>
+
+#### Exiting Fullscreen
+
+- Click the exit fullscreen icon (compress arrows)
+- Press the Escape key on keyboard
+- Access the "More" menu and toggle fullscreen off
+- Use browser's exit fullscreen control (usually appears at top)
+
+### Dark Mode
+
+Open Tarteel supports dark mode for comfortable viewing in low-light conditions:
+
+**Automatic Detection**:
+- Respects your system's color scheme preference
+- Uses `dark:` Tailwind classes for styling
+
+**Dark Mode Features**:
+- Dark backgrounds (`dark:bg-gray-800`, `dark:bg-gray-700`)
+- Adjusted text colors (`dark:text-gray-200`, `dark:text-gray-300`)
+- Modified hover states for better visibility
+- Icon colors adapted for dark backgrounds
+
+<Tip>
+  Change your system's appearance settings to automatically switch Open Tarteel between light and dark modes.
+</Tip>
+
+## Audio Visualizer
+
+The audio visualizer provides real-time visual feedback of the audio frequencies.
+
+### Visualizer Controls
+
+**Desktop**:
+- Click the spectrum icon in the control bar
+- Icon changes between enabled (colored) and disabled (grayed) states
+
+**Mobile**:
+- Access via "More" menu (⋯)
+- Select "Show visualizer" or "Hide visualizer"
+
+### Visualizer Behavior
+
+<Steps>
+  <Step title="When Enabled (Default)">
+    The visualizer displays animated frequency bars synchronized with the audio
+  </Step>
+
+  <Step title="Visual Display">
+    Shows real-time audio spectrum analysis with smooth animations
+  </Step>
+
+  <Step title="When Disabled">
+    The visualizer area is hidden to conserve resources and simplify the interface
+  </Step>
+</Steps>
+
+<Warning>
+  The visualizer can only be toggled when audio is paused. This prevents disruption during playback. Pause the audio first, then toggle the visualizer setting.
+</Warning>
+
+### Performance Considerations
+
+- **Enabled**: Uses canvas rendering for smooth animations
+- **Disabled**: Reduces CPU/GPU usage, beneficial for:
+  - Older devices
+  - Battery conservation on mobile
+  - Minimal distraction
+  - Screen recording or capture
+
+<Note>
+  Your visualizer preference is stored in `showVisualizerAtom` and persists across sessions.
+</Note>
+
+## Reciter Preferences
+
+### Favorite Reciters
+
+Mark reciters as favorites for quick access:
+
+- Click the star icon on any reciter card
+- Favorites are highlighted with a filled star
+- Access your favorites through the favorites filter
+- Stored in `favoriteRecitersAtom` as an array of reciter IDs
+
+<Tip>
+  Build your personal collection of favorite reciters for faster access to the voices you love most.
+</Tip>
+
+### Riwaya Selection
+
+Filter reciters by recitation style (Riwaya):
+
+**Available Options**:
+- All Riwayas (default)
+- Hafs
+- Warsh
+- Qalun
+- And other traditional recitation styles
+
+**Persistence**:
+- Selection stored in `selectedRiwayaAtom`
+- Automatically applied when you return to the app
+- Filters the visible reciter list
+
+### Sorting Options
+
+Customize how reciters are displayed:
+
+**Sort Methods**:
+1. **Alphabetical**: A-Z by reciter name (default)
+2. **Popular**: Most popular reciters first
+3. **Views**: Sorted by view count
+
+**Usage**:
+- Select from the sort dropdown in the header
+- Preference stored in `recitersSortAtom`
+- Applies immediately to the reciter list
+
+<Note>
+  Combine Riwaya filtering with sorting to find exactly the reciters you're looking for.
+</Note>
+
+## Playback Customization
+
+### Playback Speed
+
+Adjust playback speed for learning or review:
+
+**Available Speeds**:
+- 1.0x (normal speed, default)
+- 1.5x (faster, for review)
+- 2.0x (fastest, for quick review)
+
+**Use Cases**:
+- **1.0x**: Normal listening and memorization
+- **1.5x**: Efficient review of familiar content
+- **2.0x**: Quick scanning or time-constrained listening
+
+<Tip>
+  Speed changes don't affect audio pitch, maintaining the natural quality of the recitation.
+</Tip>
+
+### Volume Preference
+
+Your volume setting is saved:
+- Range: 0 (muted) to 1 (maximum)
+- Stored in `volumeAtom`
+- Persists across sessions
+- Independent of system volume
+
+### Playback Mode
+
+Choose how tracks advance:
+
+**Off (Linear)**:
+- Plays tracks in order
+- Stops at playlist end
+- Default behavior
+
+**Shuffle**:
+- Randomizes track order
+- Continuous playback
+- Great for variety
+
+**Repeat One**:
+- Loops current track
+- Perfect for memorization
+- Manual track change required
+
+<Note>
+  Playback mode preference is stored in `playbackModeAtom` and restored when you return.
+</Note>
+
+## Reset Settings
+
+To reset customizations:
+
+<Steps>
+  <Step title="Clear Browser Data">
+    Clear your browser's local storage for the Open Tarteel domain
+  </Step>
+
+  <Step title="Refresh Page">
+    Reload the page to restore default settings
+  </Step>
+</Steps>
+
+<Warning>
+  Clearing browser data will reset ALL preferences including favorites, playback position, and audio settings. This action cannot be undone.
+</Warning>
+
+## Storage Details
+
+All customization settings use Jotai atoms with local storage persistence:
+
+```typescript
+// Language
+localeAtom: 'ar' | 'en'
+
+// Display
+fullscreenAtom: boolean
+showVisualizerAtom: boolean
+
+// Audio
+volumeAtom: number (0-1)
+playbackSpeedAtom: 1 | 1.5 | 2
+playbackModeAtom: 'off' | 'shuffle' | 'repeat-one'
+
+// Preferences
+favoriteRecitersAtom: string[]
+selectedRiwayaAtom: Riwaya | 'all'
+recitersSortAtom: 'popular' | 'alphabetical' | 'views'
+```
+
+Settings are stored in your browser's local storage and sync automatically as you make changes.

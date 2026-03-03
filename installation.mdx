@@ -1,0 +1,362 @@
+---
+title: Installation
+description: Install Open Tarteel and set up your development environment
+---
+
+## Prerequisites
+
+Before installing Open Tarteel, ensure you have the following installed on your system:
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js" iconType="duotone">
+    Version 20 or higher required
+  </Card>
+  <Card title="Package Manager" icon="box" iconType="duotone">
+    npm, yarn, pnpm, or bun
+  </Card>
+</CardGroup>
+
+<Info>
+  Open Tarteel uses **Next.js 15** and **React 19**, which require Node.js 20 or higher.
+</Info>
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the Open Tarteel repository from GitHub:
+
+    <CodeGroup>
+      ```bash HTTPS
+      git clone https://github.com/adelpro/open-tarteel.git
+      cd open-tarteel
+      ```
+
+      ```bash SSH
+      git clone git@github.com:adelpro/open-tarteel.git
+      cd open-tarteel
+      ```
+
+      ```bash GitHub CLI
+      gh repo clone adelpro/open-tarteel
+      cd open-tarteel
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install all required dependencies using your preferred package manager:
+
+    <CodeGroup>
+      ```bash npm
+      npm install
+      ```
+
+      ```bash yarn
+      yarn install
+      ```
+
+      ```bash pnpm
+      pnpm install
+      ```
+
+      ```bash bun
+      bun install
+      ```
+    </CodeGroup>
+
+    <Note>
+      The installation includes all necessary dependencies:
+      - Next.js 15 with React 19
+      - Jotai for state management
+      - Tailwind CSS for styling
+      - Serwist for PWA capabilities
+      - TypeScript and ESLint for development
+    </Note>
+  </Step>
+
+  <Step title="Verify Installation">
+    Verify that all dependencies are installed correctly:
+
+    <CodeGroup>
+      ```bash npm
+      npm run type-check
+      ```
+
+      ```bash yarn
+      yarn type-check
+      ```
+
+      ```bash pnpm
+      pnpm type-check
+      ```
+
+      ```bash bun
+      bun run type-check
+      ```
+    </CodeGroup>
+
+    If no TypeScript errors appear, your installation is successful!
+  </Step>
+</Steps>
+
+## Development Scripts
+
+Open Tarteel comes with several useful npm scripts defined in `package.json`:
+
+### Core Scripts
+
+<CodeGroup>
+  ```bash Development Server
+  npm run dev
+  # Starts Next.js development server at http://localhost:3000
+  ```
+
+  ```bash Development with Turbopack
+  npm run dev:turbo
+  # Starts dev server with experimental Turbopack bundler
+  ```
+
+  ```bash Production Build
+  npm run build
+  # Creates optimized production build
+  ```
+
+  ```bash Start Production Server
+  npm start
+  # Runs production build locally
+  ```
+</CodeGroup>
+
+### Code Quality Scripts
+
+<CodeGroup>
+  ```bash Linting
+  npm run lint
+  # Runs ESLint to check for code issues
+  ```
+
+  ```bash Auto-fix Linting
+  npm run lint:fix
+  # Automatically fixes linting issues
+  ```
+
+  ```bash Type Checking
+  npm run type-check
+  # Runs TypeScript compiler without emitting files
+  ```
+
+  ```bash Formatting
+  npm run format
+  # Formats code with Prettier
+  ```
+</CodeGroup>
+
+### Advanced Scripts
+
+<CodeGroup>
+  ```bash React Scan
+  npm run dev:scan
+  # Scans application with React Scan at localhost:3000
+  ```
+
+  ```bash Debug Mode
+  npm run dev:inspect
+  # Starts dev server with Node.js debugger
+  ```
+</CodeGroup>
+
+## Project Structure
+
+After installation, your project structure will look like this:
+
+```text
+open-tarteel/
+├── src/
+│   ├── app/              # Next.js App Router pages
+│   │   ├── layout.tsx    # Root layout with Jotai provider
+│   │   ├── page.tsx      # Home page with reciter selector
+│   │   └── reciter/      # Dynamic reciter pages
+│   ├── components/       # React components
+│   │   ├── player.tsx    # Audio player component
+│   │   ├── reciter-selector.tsx
+│   │   └── ...
+│   ├── jotai/           # Jotai atoms for state management
+│   │   └── atom.ts      # Global state atoms
+│   ├── hooks/           # Custom React hooks
+│   ├── utils/           # Utility functions
+│   └── types/           # TypeScript type definitions
+├── public/              # Static assets
+├── package.json         # Dependencies and scripts
+├── next.config.ts       # Next.js configuration
+├── tailwind.config.ts   # Tailwind CSS configuration
+└── tsconfig.json        # TypeScript configuration
+```
+
+## Key Dependencies
+
+### Runtime Dependencies
+
+```json package.json
+{
+  "dependencies": {
+    "next": "^15.4.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "jotai": "^2.11.1",
+    "@serwist/next": "^9.0.12",
+    "wavesurfer.js": "^7.10.1",
+    "fuse.js": "^7.1.0",
+    "react-icons": "^5.5.0",
+    "tailwind-merge": "^3.3.1"
+  }
+}
+```
+
+### Development Dependencies
+
+```json package.json
+{
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^19.0.10",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
+    "tailwindcss": "^3.4.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.1"
+  }
+}
+```
+
+## Configuration Files
+
+### Next.js Configuration
+
+The `next.config.ts` file includes PWA support with Serwist:
+
+```typescript next.config.ts
+import withSerwistInit from '@serwist/next';
+
+const withSerwist = withSerwistInit({
+  swSrc: 'src/sw.ts',
+  swDest: 'public/sw.js',
+  cacheOnNavigation: true,
+  disable: !isProduction,
+  maximumFileSizeToCacheInBytes: 100 * 1024 * 1024, // 100MB
+});
+
+const nextConfig = {
+  reactStrictMode: !isProduction,
+  transpilePackages: ['jotai-devtools'],
+  productionBrowserSourceMaps: isProduction,
+  compiler: {
+    removeConsole: isProduction && { exclude: ['error'] },
+  },
+};
+
+export default withSerwist(nextConfig);
+```
+
+### Tailwind CSS Configuration
+
+Tailwind is configured with custom animations and plugins:
+
+```javascript tailwind.config.ts
+module.exports = {
+  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+    require('tailwindcss-animated'),
+  ],
+};
+```
+
+## Git Hooks
+
+Open Tarteel uses Husky and lint-staged for pre-commit hooks:
+
+```json package.json
+{
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md,css}": "prettier --write"
+  }
+}
+```
+
+<Note>
+  Git hooks automatically format and lint your code before commits, ensuring code quality consistency.
+</Note>
+
+## Environment Setup
+
+Open Tarteel doesn't require environment variables for basic usage. However, if you need to customize behavior:
+
+```bash .env.local (optional)
+# Development mode
+NODE_ENV=development
+
+# Bundle analyzer
+ANALYZE=false
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Node version error">
+    Ensure you're using Node.js 20 or higher:
+    ```bash
+    node --version
+    ```
+    If needed, use [nvm](https://github.com/nvm-sh/nvm) to install the correct version:
+    ```bash
+    nvm install 20
+    nvm use 20
+    ```
+  </Accordion>
+
+  <Accordion title="Installation fails with peer dependency warnings">
+    These warnings are usually safe to ignore with Next.js 15 and React 19. If you encounter issues, try:
+    ```bash
+    npm install --legacy-peer-deps
+    ```
+  </Accordion>
+
+  <Accordion title="Port 3000 already in use">
+    Change the port by modifying the dev script:
+    ```bash
+    next dev -p 3001
+    ```
+    Or set the PORT environment variable:
+    ```bash
+    PORT=3001 npm run dev
+    ```
+  </Accordion>
+
+  <Accordion title="TypeScript errors after installation">
+    Clean and reinstall dependencies:
+    ```bash
+    rm -rf node_modules .next
+    npm install
+    npm run type-check
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Now that you have Open Tarteel installed, proceed to the Quick Start guide to run the application:
+
+<Card
+  title="Quick Start Guide"
+  icon="rocket"
+  href="/quickstart"
+>
+  Learn how to start the development server and use Open Tarteel
+</Card>

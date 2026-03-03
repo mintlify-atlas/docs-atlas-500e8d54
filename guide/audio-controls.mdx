@@ -1,0 +1,238 @@
+---
+title: Audio Controls
+description: Master Open Tarteel's audio player features including playback modes, sleep timer, and speed control
+icon: sliders
+---
+
+Open Tarteel provides comprehensive audio controls to enhance your listening experience. This guide covers all available playback features and how to use them effectively.
+
+## Basic Playback Controls
+
+### Play/Pause
+
+The central play/pause button controls audio playback:
+
+- Click to start or pause playback
+- The button animates when transitioning states
+- Works in both normal and fullscreen modes
+
+### Track Navigation
+
+**Previous Track** (Backward button):
+- Skips to the previous recitation in the playlist
+- Located to the right of the play/pause button
+
+**Next Track** (Forward button):
+- Advances to the next recitation
+- Located to the left of the play/pause button
+
+## Volume Control
+
+The volume control provides precise audio level adjustment:
+
+<Steps>
+  <Step title="Open Volume Slider">
+    Click the volume icon (speaker) at the far right of the control bar
+  </Step>
+
+  <Step title="Adjust Volume">
+    A vertical slider appears above the icon. Drag it up or down to adjust volume from 0 to 100%
+  </Step>
+
+  <Step title="Close Slider">
+    Click anywhere outside the volume control or click the icon again to close the slider
+  </Step>
+</Steps>
+
+<Tip>
+  The volume icon changes from a full speaker (BiVolumeFull) to a muted speaker (BiVolumeMute) when volume is at 0.
+</Tip>
+
+## Playback Modes
+
+Open Tarteel offers three playback modes that cycle through with each click:
+
+### Mode 1: Off (Default)
+- Plays tracks in order from the playlist
+- Stops at the end of the playlist
+- Icon: Grayed-out shuffle icon
+
+### Mode 2: Shuffle
+- Plays tracks in random order
+- Continues indefinitely with randomized selection
+- Icon: Blue shuffle icon
+- Visual indicator: Button animates when enabled
+
+### Mode 3: Repeat One
+- Repeats the current track indefinitely
+- Perfect for memorization or focused listening
+- Icon: Blue repeat-one icon (MdRepeatOne)
+- Visual indicator: Button animates when enabled
+
+<Note>
+  Click the playback mode button to cycle: Off → Shuffle → Repeat One → Off
+</Note>
+
+## Playback Speed
+
+Adjust the playback speed to match your listening preference:
+
+**Available Speeds**: 1.0x (normal), 1.5x, 2.0x
+
+### Desktop
+- Click the speed icon (MdSpeed) in the control bar
+- A badge appears on the icon showing the current speed when not at 1x
+- Cycles through: 1x → 1.5x → 2x → 1x
+
+### Mobile
+- Access via the "More" menu (⋯ button)
+- Select "Playback speed" to cycle through options
+- Current speed is displayed in the menu item
+
+<Tip>
+  Playback speed is useful for learning purposes - use 0.75x for detailed study or 1.5x for review.
+</Tip>
+
+## Sleep Timer
+
+The sleep timer automatically pauses playback after a set duration:
+
+### Available Durations
+- **5 minutes**
+- **10 minutes**
+- **15 minutes**
+- **30 minutes**
+- **60 minutes**
+- **Until End**: Continues until the current track finishes (up to 120 minutes)
+
+### Desktop Usage
+
+<Steps>
+  <Step title="Open Sleep Timer">
+    Click the sleep icon (moon) in the control bar
+  </Step>
+
+  <Step title="Select Duration">
+    Choose from the available time options or select "Until End"
+  </Step>
+
+  <Step title="Monitor Timer">
+    A blue badge appears on the icon showing remaining minutes
+  </Step>
+
+  <Step title="Cancel Timer (Optional)">
+    Open the sleep menu again and click "Cancel Timer" button
+  </Step>
+</Steps>
+
+### Mobile Usage
+
+<Steps>
+  <Step title="Open More Menu">
+    Tap the three dots (⋯) button
+  </Step>
+
+  <Step title="Select Sleep Timer">
+    Choose a duration from the sleep timer section at the top of the menu
+  </Step>
+
+  <Step title="Monitor Timer">
+    The remaining time displays as a badge with the moon icon in the control bar
+  </Step>
+</Steps>
+
+<Warning>
+  When the sleep timer expires, playback will pause automatically. The timer will be cleared and must be set again if needed.
+</Warning>
+
+## Playlist Management
+
+### Opening the Playlist
+
+**Desktop**: Click the playlist icon (music notes) in the control bar
+
+**Mobile**: Access via the "More" menu → "Toggle playlist"
+
+The playlist displays:
+- All available recitations for the selected reciter
+- Current playing track highlighted
+- Track duration and title
+
+<Note>
+  Playlist visibility is controlled independently of other player settings.
+</Note>
+
+## Fullscreen Mode
+
+In fullscreen mode, the player interface is simplified to show only essential controls:
+
+### Entering Fullscreen
+
+**Desktop**: Click the fullscreen icon (BsFullscreen) in the control bar
+
+**Mobile**: Access via "More" menu → fullscreen option
+
+### Fullscreen Controls
+
+When in fullscreen, only three controls are visible:
+- Previous track button
+- Play/Pause button (centered, larger)
+- Next track button
+
+### Exiting Fullscreen
+
+**Desktop**: Click the exit fullscreen icon (BsFullscreenExit)
+
+**Mobile**: Access via "More" menu again
+
+**Browser**: Press the Escape key
+
+<Tip>
+  Fullscreen mode is perfect for distraction-free listening or when displaying on a larger screen.
+</Tip>
+
+## Audio Visualizer
+
+The visualizer provides visual feedback for the audio:
+
+- Toggle via the spectrum icon in the control bar (desktop)
+- Access via "More" menu on mobile
+- Shows real-time audio frequency visualization
+
+<Warning>
+  The visualizer cannot be toggled while audio is playing. Pause playback first to change this setting.
+</Warning>
+
+## State Persistence
+
+All audio control preferences are saved locally:
+
+- Volume level (0-1 range)
+- Playback speed (1, 1.5, or 2)
+- Playback mode (off, shuffle, repeat-one)
+- Visualizer visibility
+- Current playback position
+
+These settings persist across browser sessions and page refreshes.
+
+## Mobile vs Desktop Experience
+
+### Desktop (sm breakpoint and above)
+- All controls visible in the main control bar
+- Direct access to all features
+- Larger clickable areas
+- Separate sleep timer dropdown
+
+### Mobile
+- Compact control bar with essential buttons
+- "More" menu (⋯) consolidates secondary features:
+  - Sleep timer with all duration options
+  - Fullscreen toggle
+  - Visualizer toggle
+  - Playback speed control
+  - Playlist toggle
+- Sleep timer badge visible when active
+
+<Tip>
+  On mobile, long-press on control buttons may show tooltips with feature descriptions.
+</Tip>

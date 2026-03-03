@@ -1,0 +1,439 @@
+---
+title: 'State Management'
+description: 'Jotai atomic state management implementation in Open Tarteel'
+---
+
+## Jotai State Management
+
+Open Tarteel uses [Jotai](https://jotai.org/) for atomic, bottom-up state management with automatic localStorage persistence.
+
+### Why Jotai?
+
+<CardGroup cols={2}>
+  <Card title="Atomic" icon="atom">
+    Each piece of state is an independent atom that can be used anywhere in the component tree without prop drilling.
+  </Card>
+  
+  <Card title="TypeScript-First" icon="code">
+    Full TypeScript support with type inference for atoms and derived state.
+  </Card>
+  
+  <Card title="Minimal Boilerplate" icon="bolt">
+    No reducers, actions, or providers needed. Just atoms and hooks.
+  </Card>
+  
+  <Card title="Persistence" icon="database">
+    Built-in localStorage integration with SSR-safe hydration.
+  </Card>
+</CardGroup>
+
+## Core Atoms
+
+All atoms are defined in `src/jotai/atom.ts` with localStorage persistence:
+
+<CodeGroup>
+```typescript src/jotai/atom.ts
+import { Reciter, Riwaya } from '@/types';
+import { createAtomWithStorage } from './create-atom-with-storage';
+
+// Favorite reciters list
+export const favoriteRecitersAtom = createAtomWithStorage<string[]>(
+  'favorite-reciter',
+  []
+);
+
+// Selected Quranic recitation style (Hafs, Warsh, etc.)
+export const selectedRiwayaAtom = createAtomWithStorage<Riwaya | 'all'>(
+  'selected-riwaya',
+  'all'
+);
+
+// UI state atoms
+export const hideUnderConstructionAtom = createAtomWithStorage<boolean>(
+  'hide-under-construction',
+  false
+);
+
+export const fullscreenAtom = createAtomWithStorage<boolean>(
+  'fullscreen',
+  false
+);
+
+export const showVisualizerAtom = createAtomWithStorage<boolean>(
+  'show-visualizer',
+  true
+);
+
+// Locale for internationalization
+export const localeAtom = createAtomWithStorage<'ar' | 'en'>('locale', 'ar');
+
+// Audio player state
+export const currentTimeAtom = createAtomWithStorage<number>('current-time', 0);
+
+export const playbackSpeedAtom = createAtomWithStorage<number>(
+  'playback-speed-value',
+  1
+);
+
+export type PlaybackMode = 'off' | 'shuffle' | 'repeat-one';
+export const playbackModeAtom = createAtomWithStorage<PlaybackMode>(
+  'playback-mode',
+  'off'
+);
+
+export const volumeAtom = createAtomWithStorage<number>('volume-value', 1);
+
+// Reciter selection
+export const recitersSortAtom = createAtomWithStorage<
+  'popular' | 'alphabetical' | 'views'
+>('reciters-sort-atom', 'alphabetical');
+
+export const selectedReciterAtom = createAtomWithStorage<Reciter | null>(
+  'selected-reciter',
+  null
+);
+```
+</CodeGroup>
+
+### Atom Categories
+
+<Tabs>
+  <Tab title="User Preferences">
+    <ResponseField name="favoriteRecitersAtom" type="string[]">
+      Array of reciter IDs marked as favorites
+    </ResponseField>
+    
+    <ResponseField name="selectedRiwayaAtom" type="Riwaya | 'all'">
+      Selected Quranic recitation style (Hafs, Warsh, Qalun, etc.)
+    </ResponseField>
+    
+    <ResponseField name="localeAtom" type="'ar' | 'en'">
+      Application language (Arabic or English)
+    </ResponseField>
+    
+    <ResponseField name="recitersSortAtom" type="'popular' | 'alphabetical' | 'views'">
+      Sorting preference for reciter list
+    </ResponseField>
+  </Tab>
+  
+  <Tab title="UI State">
+    <ResponseField name="fullscreenAtom" type="boolean">
+      Fullscreen mode toggle
+    </ResponseField>
+    
+    <ResponseField name="showVisualizerAtom" type="boolean">
+      Audio visualizer visibility
+    </ResponseField>
+    
+    <ResponseField name="hideUnderConstructionAtom" type="boolean">
+      Hide under-construction banner
+    </ResponseField>
+  </Tab>
+  
+  <Tab title="Audio Player">
+    <ResponseField name="selectedReciterAtom" type="Reciter | null">
+      Currently selected reciter with moshaf details
+    </ResponseField>
+    
+    <ResponseField name="currentTimeAtom" type="number">
+      Current playback position in seconds
+    </ResponseField>
+    
+    <ResponseField name="volumeAtom" type="number">
+      Volume level (0.0 to 1.0)
+    </ResponseField>
+    
+    <ResponseField name="playbackSpeedAtom" type="number">
+      Playback speed multiplier (0.5x to 2.0x)
+    </ResponseField>
+    
+    <ResponseField name="playbackModeAtom" type="PlaybackMode">
+      Playback mode: 'off', 'shuffle', or 'repeat-one'
+    </ResponseField>
+  </Tab>
+</Tabs>
+
+## Storage Implementation
+
+### Custom Storage Adapter
+
+<CodeGroup>
+```typescript src/jotai/create-atom-with-storage.ts
+import { atomWithStorage } from 'jotai/utils';
+import { createStorage } from '@/utils/storage/create-storage';
+
+export function createAtomWithStorage<T>(key: string, initialValue: T) {
+  return atomWithStorage<T>(key, initialValue, createStorage<T>(), {
+    getOnInit: true, // Load from storage on initialization
+  });
+}
+```
+
+```typescript src/utils/storage/create-storage.ts
+'use client';
+import { createJSONStorage } from 'jotai/utils';
+
+const storage = {
+  getItem: (key: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(key);
+  },
+  setItem: (key: string, value: string): void => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(key, value);
+  },
+  removeItem: (key: string): void => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(key);
+  },
+};
+
+export function createStorage<T>() {
+  return createJSONStorage<T>(() => storage);
+}
+```
+</CodeGroup>
+
+<Note>
+  The storage adapter is SSR-safe by checking `typeof window === 'undefined'` before accessing localStorage.
+</Note>
+
+## Usage Patterns
+
+### Reading Atom Values
+
+<CodeGroup>
+```tsx components/example-read.tsx
+'use client';
+import { useAtomValue } from 'jotai';
+import { localeAtom, selectedReciterAtom } from '@/jotai/atom';
+
+export function ExampleComponent() {
+  // Read-only hook (doesn't trigger re-render on write)
+  const locale = useAtomValue(localeAtom);
+  const reciter = useAtomValue(selectedReciterAtom);
+  
+  return (
+    <div>
+      <p>Language: {locale}</p>
+      <p>Reciter: {reciter?.name ?? 'None selected'}</p>
+    </div>
+  );
+}
+```
+</CodeGroup>
+
+### Updating Atom Values
+
+<CodeGroup>
+```tsx components/example-write.tsx
+'use client';
+import { useSetAtom } from 'jotai';
+import { volumeAtom, playbackSpeedAtom } from '@/jotai/atom';
+
+export function VolumeControl() {
+  // Write-only hook (doesn't cause re-render)
+  const setVolume = useSetAtom(volumeAtom);
+  const setSpeed = useSetAtom(playbackSpeedAtom);
+  
+  return (
+    <div>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.1"
+        onChange={(e) => setVolume(parseFloat(e.target.value))}
+      />
+      <button onClick={() => setSpeed(1.5)}>1.5x Speed</button>
+    </div>
+  );
+}
+```
+</CodeGroup>
+
+### Reading and Writing
+
+<CodeGroup>
+```tsx components/example-read-write.tsx
+'use client';
+import { useAtom } from 'jotai';
+import { fullscreenAtom } from '@/jotai/atom';
+import { useEffect } from 'react';
+
+export function FullscreenToggle() {
+  // Read and write hook
+  const [isFullscreen, setIsFullscreen] = useAtom(fullscreenAtom);
+  
+  // Sync with browser fullscreen API
+  useEffect(() => {
+    function onFullscreenChange() {
+      const isFull = !!document.fullscreenElement;
+      setIsFullscreen(isFull);
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, [setIsFullscreen]);
+  
+  const toggleFullscreen = async () => {
+    if (!isFullscreen) {
+      await document.documentElement.requestFullscreen();
+    } else {
+      await document.exitFullscreen();
+    }
+  };
+  
+  return (
+    <button onClick={toggleFullscreen}>
+      {isFullscreen ? 'Exit' : 'Enter'} Fullscreen
+    </button>
+  );
+}
+```
+</CodeGroup>
+
+### Derived Atoms
+
+<Expandable title="Create computed state from multiple atoms">
+```typescript src/jotai/derived-atoms.ts
+import { atom } from 'jotai';
+import { selectedReciterAtom, favoriteRecitersAtom } from './atom';
+
+// Derived atom: check if current reciter is favorited
+export const isCurrentReciterFavoriteAtom = atom((get) => {
+  const reciter = get(selectedReciterAtom);
+  const favorites = get(favoriteRecitersAtom);
+  
+  if (!reciter) return false;
+  return favorites.includes(reciter.id.toString());
+});
+
+// Write-only derived atom: toggle favorite
+export const toggleFavoriteAtom = atom(
+  null, // no read function
+  (get, set) => {
+    const reciter = get(selectedReciterAtom);
+    if (!reciter) return;
+    
+    const favorites = get(favoriteRecitersAtom);
+    const reciterId = reciter.id.toString();
+    
+    if (favorites.includes(reciterId)) {
+      set(favoriteRecitersAtom, favorites.filter(id => id !== reciterId));
+    } else {
+      set(favoriteRecitersAtom, [...favorites, reciterId]);
+    }
+  }
+);
+```
+
+Usage:
+```tsx
+const isFavorite = useAtomValue(isCurrentReciterFavoriteAtom);
+const toggleFavorite = useSetAtom(toggleFavoriteAtom);
+
+<button onClick={toggleFavorite}>
+  {isFavorite ? '❤️' : '🤍'} Favorite
+</button>
+```
+</Expandable>
+
+## DevTools Integration
+
+<Steps>
+  <Step title="Install Jotai DevTools">
+    Already included in `package.json`:
+    ```json
+    {
+      "dependencies": {
+        "jotai": "^2.11.1",
+        "jotai-devtools": "^0.12.0"
+      }
+    }
+    ```
+  </Step>
+  
+  <Step title="Add DevTools Provider">
+    Wrap your app with `DevTools` component:
+    ```tsx src/app/layout.tsx
+    import { DevTools } from 'jotai-devtools';
+    import 'jotai-devtools/styles.css';
+    
+    export default function RootLayout({ children }) {
+      return (
+        <html>
+          <body>
+            {process.env.NODE_ENV === 'development' && <DevTools />}
+            {children}
+          </body>
+        </html>
+      );
+    }
+    ```
+  </Step>
+  
+  <Step title="Debug Atoms">
+    Open DevTools in development mode to:
+    - View all atoms and their values
+    - Track atom updates in real-time
+    - Time-travel debugging
+    - Inspect atom dependencies
+  </Step>
+</Steps>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Specific Hooks">
+    - Use `useAtomValue()` for read-only access (better performance)
+    - Use `useSetAtom()` for write-only access
+    - Use `useAtom()` only when you need both read and write
+    
+    ```tsx
+    // ❌ Bad: unnecessary re-renders
+    const [volume, setVolume] = useAtom(volumeAtom);
+    return <button onClick={() => setVolume(1)}>Max</button>;
+    
+    // ✅ Good: no re-renders
+    const setVolume = useSetAtom(volumeAtom);
+    return <button onClick={() => setVolume(1)}>Max</button>;
+    ```
+  </Accordion>
+  
+  <Accordion title="Lazy Initialization">
+    Use `getOnInit: true` to load persisted values immediately:
+    ```typescript
+    createAtomWithStorage(key, initialValue, storage, {
+      getOnInit: true, // Load from localStorage on init
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Type Safety">
+    Always define TypeScript types for atoms:
+    ```typescript
+    // ✅ Good: explicit type
+    export const volumeAtom = createAtomWithStorage<number>('volume', 1);
+    
+    // ❌ Bad: inferred type may be too loose
+    export const volumeAtom = createAtomWithStorage('volume', 1);
+    ```
+  </Accordion>
+  
+  <Accordion title="Avoid Circular Dependencies">
+    Don't create circular atom dependencies:
+    ```typescript
+    // ❌ Bad: circular dependency
+    const atomA = atom((get) => get(atomB) + 1);
+    const atomB = atom((get) => get(atomA) + 1);
+    
+    // ✅ Good: unidirectional flow
+    const baseAtom = atom(0);
+    const derivedAtom = atom((get) => get(baseAtom) * 2);
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Check>
+  Jotai provides a simple, type-safe, and performant state management solution with automatic persistence for Open Tarteel.
+</Check>

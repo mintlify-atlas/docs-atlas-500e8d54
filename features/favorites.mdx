@@ -1,0 +1,326 @@
+---
+title: Favorites System
+description: Save and sync your favorite reciters using decentralized GunDB technology
+icon: star
+---
+
+Open Tarteel features a distributed favorites system powered by GunDB, allowing you to save preferred reciters and see real-time popularity statistics across all users.
+
+## Adding Favorites
+
+Mark reciters as favorites for quick access:
+
+1. Find a reciter you enjoy
+2. Click the star icon on their card or in the player
+3. The star fills in to indicate favorite status
+4. Your favorite is saved locally and synced to the network
+
+<Info>
+Favorites are indicated with a filled yellow star, while non-favorites show an outlined gray star.
+</Info>
+
+## Removing Favorites
+
+To unfavorite a reciter:
+
+1. Click the filled star icon
+2. The star returns to outlined state
+3. The favorite is removed locally and the network is updated
+
+```typescript
+// From use-favorites.ts:24-33
+const toggleFavorite = useCallback(
+  (favId: string) => {
+    const isFav = favoriteReciters.includes(favId);
+    setFavoriteReciters((previous) =>
+      isFav ? previous.filter((id) => id !== favId) : [...previous, favId]
+    );
+    syncFavorite(favId, !isFav);
+  },
+  [favoriteReciters, setFavoriteReciters]
+);
+```
+
+## GunDB Synchronization
+
+Open Tarteel uses GunDB for decentralized data synchronization:
+
+<CardGroup cols={2}>
+  <Card title="Local Storage" icon="hard-drive">
+    Favorites saved to browser localStorage
+  </Card>
+  <Card title="Peer Network" icon="network-wired">
+    Synced across GunDB distributed network
+  </Card>
+  <Card title="Real-time Updates" icon="bolt">
+    Live favorite counts from all users
+  </Card>
+  <Card title="No Account Required" icon="user-slash">
+    Works without registration or login
+  </Card>
+</CardGroup>
+
+### How GunDB Works
+
+<Tabs>
+  <Tab title="Distributed">
+    Data is distributed across multiple peers rather than stored on a central server. This makes the system resilient and fast.
+  </Tab>
+  
+  <Tab title="Real-time">
+    Changes propagate instantly through the peer network. When anyone favorites a reciter, the count updates for all users in real-time.
+  </Tab>
+  
+  <Tab title="Offline-First">
+    Favorites work offline and sync automatically when you reconnect. No data loss even without internet.
+  </Tab>
+</Tabs>
+
+## Favorite Counts
+
+See how many users have favorited each reciter:
+
+```typescript
+// From favorite-rank.ts:13-27
+export function fetchFavoriteCounts(): Promise<Record<string, number>> {
+  return new Promise((resolve) => {
+    const counts: Record<string, number> = {};
+    let timeout = setTimeout(() => resolve({ ...counts }), 1000);
+
+    favoriteCountsNode.map().once((count, key) => {
+      if (!key || typeof count !== 'number') return;
+      counts[key] = count;
+      
+      clearTimeout(timeout);
+      timeout = setTimeout(() => resolve({ ...counts }), 300);
+    });
+  });
+}
+```
+
+<Note>
+Favorite counts are fetched from the GunDB network with a 1-second timeout to ensure the app remains responsive.
+</Note>
+
+## Live Updates
+
+Favorite counts update in real-time as users interact:
+
+```typescript
+// From favorite-rank.ts:32-46
+export function subscribeToFavoriteCounts(
+  callback: (counts: Record<string, number>) => void
+): () => void {
+  const counts: Record<string, number> = {};
+
+  const onUpdate = (count: number, key: string) => {
+    if (!key || typeof count !== 'number') return;
+    counts[key] = count;
+    callback({ ...counts });
+  };
+
+  favoriteCountsNode.map().on(onUpdate);
+  return () => favoriteCountsNode.map().off();
+}
+```
+
+### Real-time Features
+
+<Accordion title="Live Statistics">
+  - **Instant Updates** - See favorite counts change as users interact
+  - **Network Sync** - Updates propagate through GunDB peer network
+  - **No Polling** - Uses WebSocket-like subscriptions for efficiency
+  - **Automatic Cleanup** - Subscriptions are properly disposed when components unmount
+</Accordion>
+
+## Filtering by Favorites
+
+Quickly access your favorited reciters:
+
+1. Open the reciter selector
+2. Toggle "Show only favorites"
+3. The list filters to show only your favorited reciters
+4. Toggle off to see all reciters again
+
+<Info>
+The favorites filter state is maintained in the hook and can be toggled on/off without losing your place in the list.
+</Info>
+
+## Favorite Storage
+
+Favorites are stored using Jotai atoms with persistence:
+
+```typescript
+// From atom.ts:5-8
+export const favoriteRecitersAtom = createAtomWithStorage<string[]>(
+  'favorite-reciter',
+  []
+);
+```
+
+### Storage Features
+
+<CardGroup cols={2}>
+  <Card title="Browser Storage" icon="database">
+    Saved to localStorage under key 'favorite-reciter'
+  </Card>
+  <Card title="Array Format" icon="list">
+    Stored as array of reciter IDs
+  </Card>
+  <Card title="Persistent" icon="floppy-disk">
+    Survives browser restarts and tab closes
+  </Card>
+  <Card title="Reactive" icon="arrows-rotate">
+    Updates trigger re-renders automatically
+  </Card>
+</CardGroup>
+
+## Generating Favorite IDs
+
+Each favorite is identified by a unique ID:
+
+```typescript
+// From reciter-selector.tsx:51-52
+const favId = selectedReciter ? generateFavId(selectedReciter) : null;
+const isFavorite = favId ? favoriteReciters.includes(favId) : false;
+```
+
+The ID is generated from:
+- Reciter ID
+- Mushaf name
+- Riwaya type
+
+This ensures each unique reciter/mushaf combination is tracked separately.
+
+## Network Synchronization
+
+When you favorite a reciter:
+
+```typescript
+// From favorite-rank.ts:51-59
+export function syncFavorite(id: string, isFavorited: boolean): void {
+  const ref = favoriteCountsNode.get(id);
+  ref.once((currentCount: number = 0) => {
+    const updated = isFavorited
+      ? currentCount + 1
+      : Math.max(0, currentCount - 1);
+    ref.put(updated);
+  });
+}
+```
+
+### Sync Process
+
+1. **Read Current Count** - Fetch the current favorite count from GunDB
+2. **Calculate Update** - Increment if favoriting, decrement if unfavoriting
+3. **Write to Network** - Push the updated count to all peers
+4. **Propagate** - GunDB distributes the change to all connected clients
+
+<Warning>
+Favorite counts are incremented/decremented but not verified against unique users. The count represents total favorite actions, not unique users.
+</Warning>
+
+## Favorites Hook
+
+The `useFavorites` hook provides complete favorites functionality:
+
+```typescript
+// From use-favorites.ts:11-42
+export function useFavorites() {
+  const [favoriteReciters, setFavoriteReciters] = useAtom(favoriteRecitersAtom);
+  const [favoriteCounts, setFavoriteCounts] = useState<Record<string, number>>({});
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+
+  useEffect(() => {
+    fetchFavoriteCounts().then(setFavoriteCounts);
+    const unsubscribe = subscribeToFavoriteCounts(setFavoriteCounts);
+    return () => unsubscribe();
+  }, []);
+
+  const toggleFavorite = useCallback(/* ... */);
+
+  return {
+    favoriteReciters,
+    favoriteCounts,
+    toggleFavorite,
+    showOnlyFavorites,
+    setShowOnlyFavorites,
+  };
+}
+```
+
+### Hook Features
+
+<Tabs>
+  <Tab title="State Management">
+    - Manages local favorite list
+    - Tracks global favorite counts
+    - Controls filter toggle state
+  </Tab>
+  
+  <Tab title="Real-time Sync">
+    - Subscribes to GunDB updates on mount
+    - Unsubscribes on unmount to prevent memory leaks
+    - Updates UI instantly when counts change
+  </Tab>
+  
+  <Tab title="Actions">
+    - `toggleFavorite(id)` - Add/remove favorite
+    - `setShowOnlyFavorites(bool)` - Filter the list
+  </Tab>
+</Tabs>
+
+## Visual Indicators
+
+Favorite state is clearly indicated:
+
+### In Reciter Cards
+
+- **Outlined star** - Not favorited, gray color
+- **Filled star** - Favorited, yellow/amber color
+- **Amber tint** - Card background tints amber when favorited
+- **Count badge** - Shows total favorite count from all users
+
+### In Player
+
+- Star icon appears in the reciter selector bar
+- Clicking toggles favorite status
+- Color indicates current state (gray/yellow)
+
+<Note>
+Favorite indicators are accessible with proper ARIA labels for screen readers (reciter-card.tsx:74).
+</Note>
+
+## Data Privacy
+
+The favorites system respects your privacy:
+
+- No personal information is stored
+- Only reciter IDs are synced to the network
+- Local favorites remain in your browser
+- No account or email required
+- Anonymous participation in global counts
+
+<Info>
+Clear browser data will remove your local favorites. They cannot be recovered as they're stored locally, not on a server.
+</Info>
+
+## Troubleshooting
+
+<Accordion title="Common Issues">
+  **Favorites not syncing?**
+  - Check your internet connection
+  - Verify GunDB peers are accessible
+  - Try refreshing the page
+  - Check browser console for errors
+
+  **Lost favorites after clearing data?**
+  - Favorites are stored in localStorage
+  - Clearing browser data removes them permanently
+  - Re-favorite your preferred reciters
+
+  **Counts seem incorrect?**
+  - Counts represent total actions, not unique users
+  - Network may take a moment to sync
+  - Refresh to fetch latest counts
+</Accordion>

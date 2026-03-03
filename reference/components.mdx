@@ -1,0 +1,363 @@
+---
+title: Component Reference
+description: Complete reference for all Open Tarteel UI components
+icon: 'puzzle-piece'
+---
+
+## Core Components
+
+### Player
+
+The main audio player component that handles playback, controls, and state management.
+
+**Location:** `src/components/player.tsx:27`
+
+<ParamField path="playlist" type="Playlist" required>
+  Array of playlist items containing surah information and audio links
+</ParamField>
+
+**Features:**
+- Audio playback with play/pause controls
+- Shuffle and repeat modes
+- Volume control
+- Playback speed adjustment
+- Fullscreen mode
+- Media session integration
+- Sleep timer
+
+<CodeGroup>
+```tsx Usage
+import Player from '@/components/player';
+import { Playlist } from '@/types';
+
+const playlist: Playlist = [
+  { surahId: '1', link: 'https://example.com/001.mp3' },
+  { surahId: '2', link: 'https://example.com/002.mp3' },
+];
+
+<Player playlist={playlist} />
+```
+
+```tsx Example
+'use client';
+import { Player } from '@/components/player';
+import { useAtomValue } from 'jotai';
+import { selectedReciterAtom } from '@/jotai/atom';
+
+export default function PlayerPage() {
+  const selectedReciter = useAtomValue(selectedReciterAtom);
+  const playlist = selectedReciter?.moshaf?.playlist || [];
+  
+  return <Player playlist={playlist} />;
+}
+```
+</CodeGroup>
+
+---
+
+### ReciterSelector
+
+A button-style component for selecting reciters with search, favorite, and share functionality.
+
+**Location:** `src/components/reciter-selector.tsx:18`
+
+**Props:** None (uses global state)
+
+**Features:**
+- Displays selected reciter name
+- Opens reciter selection dialog
+- Favorite/unfavorite functionality
+- Share reciter via Web Share API or clipboard
+- Skeleton loading state during SSR
+
+<CodeGroup>
+```tsx Usage
+import ReciterSelector from '@/components/reciter-selector';
+
+<ReciterSelector />
+```
+</CodeGroup>
+
+---
+
+### Playlist
+
+Displays a scrollable list of playlist items (surahs) with click handlers.
+
+**Location:** `src/components/playlist.tsx:16`
+
+<ParamField path="setIsOpen" type="(isOpen: boolean) => void" required>
+  Function to control dialog open/close state
+</ParamField>
+
+<ParamField path="setCurrentTrack" type="React.Dispatch<React.SetStateAction<number | undefined>>" required>
+  Function to set the currently playing track index
+</ParamField>
+
+<CodeGroup>
+```tsx Usage
+import Playlist from '@/components/playlist';
+import { useState } from 'react';
+
+const [isOpen, setIsOpen] = useState(false);
+const [currentTrack, setCurrentTrack] = useState<number | undefined>(0);
+
+<Playlist 
+  setIsOpen={setIsOpen}
+  setCurrentTrack={setCurrentTrack}
+/>
+```
+</CodeGroup>
+
+---
+
+### TrackInfo
+
+Displays information about the currently playing track including surah name and timestamps.
+
+**Location:** `src/components/track-info.tsx:17`
+
+<ParamField path="currentTrackId" type="number" required>
+  Index of the currently playing track
+</ParamField>
+
+<ParamField path="duration" type="number" required>
+  Total duration of the track in seconds
+</ParamField>
+
+<ParamField path="currentTime" type="number" required>
+  Current playback position in seconds
+</ParamField>
+
+<CodeGroup>
+```tsx Usage
+import TrackInfo from '@/components/track-info';
+
+<TrackInfo
+  currentTrackId={0}
+  duration={300}
+  currentTime={45}
+/>
+```
+</CodeGroup>
+
+---
+
+### AudioBarsVisualizer
+
+Audio spectrum visualizer that displays animated bars during playback.
+
+**Location:** `src/components/audio-bars-visualizer.tsx:14`
+
+<ParamField path="audioId" type="string" required>
+  DOM ID of the audio element to visualize
+</ParamField>
+
+<ParamField path="isPlaying" type="boolean" required>
+  Whether audio is currently playing
+</ParamField>
+
+**Features:**
+- Responsive width calculation
+- Only renders when visualizer is enabled (global state)
+- Smooth animations
+- Blue color scheme matching brand
+
+<CodeGroup>
+```tsx Usage
+import AudioBarsVisualizer from '@/components/audio-bars-visualizer';
+
+<audio id="audio" src="track.mp3" />
+<AudioBarsVisualizer audioId="audio" isPlaying={true} />
+```
+</CodeGroup>
+
+---
+
+### Range
+
+Custom range slider for seeking through audio tracks.
+
+**Location:** `src/components/range.tsx:12`
+
+<ParamField path="currentTime" type="number" required>
+  Current playback position in seconds
+</ParamField>
+
+<ParamField path="duration" type="number" required>
+  Total track duration in seconds
+</ParamField>
+
+<ParamField path="setCurrentTime" type="(time: number) => void" required>
+  Callback to update current time
+</ParamField>
+
+<ParamField path="audioRef" type="React.RefObject<HTMLAudioElement | null>" required>
+  Reference to the audio element
+</ParamField>
+
+**Features:**
+- RTL support (direction-aware gradient)
+- Smooth gradient fill showing progress
+- Custom thumb styling
+- Synchronized with audio element
+
+<CodeGroup>
+```tsx Usage
+import Range from '@/components/range';
+import { useRef, useState } from 'react';
+
+const audioRef = useRef<HTMLAudioElement>(null);
+const [currentTime, setCurrentTime] = useState(0);
+const [duration, setDuration] = useState(0);
+
+<Range
+  currentTime={currentTime}
+  duration={duration}
+  setCurrentTime={setCurrentTime}
+  audioRef={audioRef}
+/>
+```
+</CodeGroup>
+
+---
+
+## UI Components
+
+### Dialog
+
+Reusable modal dialog component with backdrop and animations.
+
+**Location:** `src/components/dialog.tsx:14`
+
+<ParamField path="isOpen" type="boolean" required>
+  Controls dialog visibility
+</ParamField>
+
+<ParamField path="setIsOpen" type="(isOpen: boolean) => void" required>
+  Function to update open state
+</ParamField>
+
+<ParamField path="children" type="ReactNode" required>
+  Dialog content
+</ParamField>
+
+<ParamField path="hideCloseButton" type="boolean" default="false">
+  Hide the close button in top-right corner
+</ParamField>
+
+<ParamField path="className" type="string">
+  Additional CSS classes for customization
+</ParamField>
+
+**Features:**
+- Native `<dialog>` element
+- Backdrop click to close
+- ESC key to close
+- Slide-in animation
+- Scrollable content
+
+<CodeGroup>
+```tsx Usage
+import Dialog from '@/components/dialog';
+import { useState } from 'react';
+
+const [isOpen, setIsOpen] = useState(false);
+
+<Dialog isOpen={isOpen} setIsOpen={setIsOpen}>
+  <h2>Dialog Content</h2>
+  <p>Your content here</p>
+</Dialog>
+```
+</CodeGroup>
+
+---
+
+### Tooltip
+
+Simple tooltip that appears on hover.
+
+**Location:** `src/components/tooltip.tsx:13`
+
+<ParamField path="content" type="string" required>
+  Tooltip text to display
+</ParamField>
+
+<ParamField path="children" type="React.ReactNode" required>
+  Element to attach tooltip to
+</ParamField>
+
+<ParamField path="className" type="string">
+  Additional CSS classes
+</ParamField>
+
+<CodeGroup>
+```tsx Usage
+import Tooltip from '@/components/tooltip';
+
+<Tooltip content="Click to play">
+  <button>Play</button>
+</Tooltip>
+```
+</CodeGroup>
+
+---
+
+### PlayerControls
+
+Comprehensive player control panel with play/pause, navigation, volume, and advanced features.
+
+**Location:** `src/components/player-controls.tsx:53`
+
+<ParamField path="isPlaying" type="boolean" required>
+  Current playback state
+</ParamField>
+
+<ParamField path="togglePlayPause" type="() => void" required>
+  Toggle play/pause callback
+</ParamField>
+
+<ParamField path="handleNextTrack" type="() => void" required>
+  Skip to next track callback
+</ParamField>
+
+<ParamField path="handlePreviousTrack" type="() => void" required>
+  Skip to previous track callback
+</ParamField>
+
+<ParamField path="togglePlaylistOpen" type="() => void" required>
+  Toggle playlist dialog callback
+</ParamField>
+
+<ParamField path="volumeRef" type="RefObject<HTMLDivElement | null>" required>
+  Ref for volume control container (click-outside detection)
+</ParamField>
+
+**Features:**
+- Responsive layout (mobile vs desktop)
+- Volume slider with mute
+- Playback speed control (1x, 1.5x, 2x)
+- Shuffle and repeat modes
+- Fullscreen toggle
+- Sleep timer with presets
+- Audio visualizer toggle
+- Playlist access
+- Internationalized labels
+
+<CodeGroup>
+```tsx Usage
+import PlayerControls from '@/components/player-controls';
+import { useRef } from 'react';
+
+const volumeRef = useRef<HTMLDivElement>(null);
+
+<PlayerControls
+  isPlaying={isPlaying}
+  volumeRef={volumeRef}
+  togglePlayPause={() => setIsPlaying(!isPlaying)}
+  handleNextTrack={handleNext}
+  handlePreviousTrack={handlePrev}
+  togglePlaylistOpen={() => setPlaylistOpen(true)}
+/>
+```
+</CodeGroup>
